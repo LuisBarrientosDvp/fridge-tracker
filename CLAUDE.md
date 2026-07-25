@@ -117,7 +117,9 @@ Y advertencia al cerrar sesión si hay cola sin sincronizar. Es la única defens
 
 ## Gotchas conocidos
 
-**`BarcodeDetector` no existe en Safari/iOS.** Todos los navegadores de iOS usan WebKit y ninguno lo implementa. En `scanner.web.ts` hay que detectar disponibilidad y degradar (a captura manual en el mockup; a ZBar-WASM si hace falta soporte iOS en web).
+**`BarcodeDetector` no existe en Safari/iOS.** Todos los navegadores de iOS usan WebKit y ninguno lo implementa. En `scanner.web.ts` hay que detectar disponibilidad y degradar (a captura manual en el mockup; a ZBar-WASM si hace falta soporte iOS en web). *Verificado 2026-07-25 en un iPhone 17: la degradación a captura manual funciona.*
+
+**WebKit niega la geolocalización con certificado autofirmado.** En iOS, aceptar la advertencia del certificado deja cargar la página, pero `getCurrentPosition` falla — muchas veces sin mostrar el prompt de permiso. En dev (basic-ssl) los eventos de iPhone se encolan sin GPS; con certificado válido en producción no aplica. Verificado 2026-07-25.
 
 **Los códigos 1D son mucho más difíciles de leer que los QR.** Sin patrones de localización ni corrección de errores. Etiquetas viejas, grasosas o descoloridas van a fallar. Por eso la regla 5.
 

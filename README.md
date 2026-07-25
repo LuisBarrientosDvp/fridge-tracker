@@ -63,6 +63,16 @@ fecha, GPS, captura manual).
   `adb reverse tcp:5173 tcp:5173`; luego abre `https://localhost:5173` en el
   teléfono (localhost sí es contexto seguro).
 
+### Qué esperar en un iPhone
+
+La página carga y la cola funciona, pero **no hay escaneo con cámara**: ningún
+navegador de iOS implementa `BarcodeDetector` (Apple obliga a WebKit), así que
+la app cae directo a captura manual — comportamiento verificado en un
+iPhone 17. Además WebKit niega la geolocalización con certificado autofirmado,
+así que en dev los eventos de iPhone van sin GPS. Si iOS entra al alcance
+(pregunta abierta #4 de CLAUDE.md), las opciones son un fallback ZBar-WASM en
+`scanner.web.ts` o esperar a la fase nativa (ML Kit sí escanea en iOS).
+
 ---
 
 ## Estructura
@@ -99,6 +109,18 @@ navegador directa. Si necesitas una capacidad nueva del dispositivo, crea un
 servicio nuevo (interfaz + `.web.ts` + export en `index.ts`).
 
 ## Estado actual
+
+**Probado en campo (2026-07-25, dev server en red local):**
+
+- **Android + Chrome: funciona completo.** Escaneo con cámara, vibración,
+  flash, cadena cruda + formato, encolado en Dexie, contador y `/debug`.
+- **iPhone 17: degrada como está diseñado.** No hay `BarcodeDetector` en
+  ningún navegador de iOS (todos son WebKit), así que la app va directo a
+  captura manual sin intentar abrir la cámara. La cola y `/debug` funcionan.
+- **En iOS el GPS falla en dev**: WebKit niega la geolocalización en orígenes
+  con certificado autofirmado (muchas veces sin mostrar el prompt). El evento
+  se encola sin GPS, que es el comportamiento best-effort esperado. Con un
+  certificado válido (producción) esto no debería pasar.
 
 **Hecho:**
 
