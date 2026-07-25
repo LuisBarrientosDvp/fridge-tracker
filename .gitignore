@@ -1,0 +1,19 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+.vite/
+
+# Variables de entorno — nunca commitear credenciales
+.env
+.env.*
+*.local
+
+# Editor
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
