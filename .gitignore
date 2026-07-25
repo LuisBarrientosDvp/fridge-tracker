@@ -4,6 +4,7 @@ node_modules/
 # Build
 dist/
 .vite/
+*.tsbuildinfo
 
 # Variables de entorno — nunca commitear credenciales
 .env
