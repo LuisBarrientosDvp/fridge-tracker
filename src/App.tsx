@@ -1,8 +1,15 @@
-// Shell mínimo. Las rutas reales (escaneo y depuración) entran junto con sus pantallas.
+import { BrowserRouter, Route, Routes } from 'react-router'
+import { ContadorPendientes } from './components/ContadorPendientes'
+import EscaneoPage from './pages/EscaneoPage'
+
 export default function App() {
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-slate-900 text-slate-100">
-      <h1 className="text-2xl font-bold">Fridge Tracker</h1>
-    </main>
+    <BrowserRouter>
+      {/* Fuera de <Routes> para que el contador se vea en todas las pantallas */}
+      <ContadorPendientes />
+      <Routes>
+        <Route path="/" element={<EscaneoPage />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
