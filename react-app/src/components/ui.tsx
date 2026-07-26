@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { device } from '../services'
 import type { Equipo } from '../types/api'
 import {
   COLOR_CONDICION,
@@ -61,6 +62,15 @@ export function InsigniaCondicion({ equipo }: { equipo: Equipo }) {
   )
 }
 
+// Nota de dispositivo para las barras superiores: PC / Android / iOS / Móvil.
+export function EtiquetaDispositivo() {
+  return (
+    <span className="shrink-0 rounded-full bg-marino-700/60 px-2.5 py-1 text-[11px] font-medium text-marino-300">
+      Dispositivo: {device.tipo()}
+    </span>
+  )
+}
+
 // Cabecera estándar de página: barra marina del design system.
 export function Cabecera({
   titulo,
@@ -86,6 +96,9 @@ export function Cabecera({
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold">{titulo}</h1>
           {subtitulo && <p className="truncate text-xs text-marino-300">{subtitulo}</p>}
+        </div>
+        <div className="ml-auto">
+          <EtiquetaDispositivo />
         </div>
       </div>
     </header>

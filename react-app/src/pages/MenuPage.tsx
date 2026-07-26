@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { useSesion } from '../context/SesionContext'
-import { LogoCopo } from '../components/ui'
+import { EtiquetaDispositivo, LogoCopo } from '../components/ui'
 
 const ETIQUETA_ROL: Record<string, string> = {
   ADMIN: 'Superadmin',
@@ -84,7 +84,10 @@ export default function MenuPage() {
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <LogoCopo tamano={28} />
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold leading-none">Fridge Tracker</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-bold leading-none">Fridge Tracker</h1>
+              <EtiquetaDispositivo />
+            </div>
             <p className="mt-1 truncate text-sm text-marino-300">
               {usuario.nombre} · {ETIQUETA_ROL[usuario.rol] ?? usuario.rol}
             </p>
