@@ -7,8 +7,11 @@ import type { Usuario } from '../types/api'
 //  sin-sesion   — no hay login: mostrar LoginPage
 //  sin-registro — hay login pero el correo no está en la tabla Usuario (403)
 //  sin-sdk      — la app corre fuera del dominio de Catalyst (npm start local)
+//  error-auth   — Catalyst SÍ tiene sesión pero el backend la rechaza (401).
+//                 Mostrar error en vez del login: reenviar al login hospedado
+//                 rebotaría de inmediato y produciría el bucle infinito.
 //  lista        — sesión completa, `usuario` disponible con su rol
-type EstadoSesion = 'cargando' | 'sin-sesion' | 'sin-registro' | 'sin-sdk' | 'lista'
+type EstadoSesion = 'cargando' | 'sin-sesion' | 'sin-registro' | 'sin-sdk' | 'error-auth' | 'lista'
 
 interface Sesion {
   estado: EstadoSesion
@@ -44,7 +47,15 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
         return
       }
       if (err instanceof ApiError && err.status === 401) {
-        setEstado(auth.sdkDisponible() ? 'sin-sesion' : 'sin-sdk')
+        if (!auth.sdkDisponible()) {
+          setEstado('sin-sdk')
+          return
+        }
+        // El SDK arbitra (§ spec: sdk-web isUserAuthenticated): si Catalyst
+        // dice que SÍ hay sesión pero el backend devolvió 401, mandar al
+        // login hospedado solo rebotaría (bucle) — mostrar error-auth.
+        const conSesion = await auth.estaAutenticado()
+        setEstado(conSesion ? 'error-auth' : 'sin-sesion')
         return
       }
       // Red caída o dev local sin backend: mostrar login con aviso.

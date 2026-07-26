@@ -4,10 +4,16 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#1F3A5F" />
     <meta
       name="description"
       content="Fridge Tracker — trazabilidad de refrigeradores en campo"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"
+      rel="stylesheet"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
@@ -15,7 +21,9 @@
     <!-- Web SDK de Catalyst: window.catalyst para login y token. init.js lo
          sirve el hosting del proyecto; en npm start local no existe y la app
          lo detecta (estado sin-sdk). -->
-    <script src="https://static.zohocdn.com/catalyst/sdk/js/4.4.0/catalystWebSDK.js"></script>
+    <!-- v4.6.1 mínimo: generateAuthToken (4.6.1) e isUserAuthenticated (4.5.0).
+         Con 4.4.0 el token nunca se enviaba y el backend respondía 401 → bucle de login. -->
+    <script src="https://static.zohocdn.com/catalyst/sdk/js/4.6.1/catalystWebSDK.js"></script>
     <script src="/__catalyst/sdk/init.js"></script>
   </head>
   <body>

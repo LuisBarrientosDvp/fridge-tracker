@@ -76,10 +76,10 @@ export default function AltaEquipoPage() {
   }
 
   const campo =
-    'w-full rounded-lg border-2 border-slate-700 bg-slate-900 p-3 text-slate-100 focus:border-emerald-400 focus:outline-none'
+    'w-full rounded-xl border border-borde bg-white p-3 text-tinta shadow-carta placeholder:text-tinta-3 focus:border-cian focus:outline-none disabled:bg-panel'
 
   return (
-    <main className="min-h-dvh bg-slate-950 pb-16">
+    <main className="min-h-dvh bg-lienzo pb-16">
       <Cabecera titulo="Alta de equipo en campo" subtitulo="Quedará EN ALMACÉN · OPERATIVO" volverA="/escanear" />
 
       <form
@@ -90,7 +90,7 @@ export default function AltaEquipoPage() {
         }}
       >
         <div>
-          <label className="mb-1 block text-sm font-semibold text-slate-400">Serial (placa)</label>
+          <label className="mb-1 block text-sm font-medium text-tinta-2">Serial (placa)</label>
           <input
             className={`${campo} font-mono ${sinSerial ? 'opacity-40' : ''}`}
             value={serial}
@@ -101,10 +101,10 @@ export default function AltaEquipoPage() {
             spellCheck={false}
             placeholder="Serial de la placa"
           />
-          <label className="mt-2 flex items-center gap-2 text-sm text-slate-400">
+          <label className="mt-2 flex items-center gap-2 text-sm text-tinta-2">
             <input
               type="checkbox"
-              className="h-5 w-5 accent-emerald-500"
+              className="h-5 w-5 accent-cian-600"
               checked={sinSerial}
               onChange={(e) => setSinSerial(e.target.checked)}
             />
@@ -114,7 +114,7 @@ export default function AltaEquipoPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-400">Marca *</label>
+            <label className="mb-1 block text-sm font-medium text-tinta-2">Marca *</label>
             <select className={campo} value={marca} onChange={(e) => setMarca(e.target.value)}>
               <option value="">Elegir marca…</option>
               {marcas.map((m) => (
@@ -125,7 +125,7 @@ export default function AltaEquipoPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-400">Tipo de equipo *</label>
+            <label className="mb-1 block text-sm font-medium text-tinta-2">Tipo de equipo *</label>
             <select className={campo} value={tipo} onChange={(e) => setTipo(e.target.value)}>
               <option value="">Elegir tipo…</option>
               {tipos.map((t) => (
@@ -136,7 +136,7 @@ export default function AltaEquipoPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-400">Modelo</label>
+            <label className="mb-1 block text-sm font-medium text-tinta-2">Modelo</label>
             <input
               className={campo}
               value={modelo}
@@ -146,7 +146,7 @@ export default function AltaEquipoPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-400">Año</label>
+            <label className="mb-1 block text-sm font-medium text-tinta-2">Año</label>
             <input
               className={campo}
               value={anio}
@@ -156,7 +156,7 @@ export default function AltaEquipoPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-400">Cerveza / marca publicitaria</label>
+            <label className="mb-1 block text-sm font-medium text-tinta-2">Cerveza / marca publicitaria</label>
             <select className={campo} value={cerveza} onChange={(e) => setCerveza(e.target.value)}>
               <option value="">Opcional…</option>
               {cervezas.map((c) => (
@@ -167,7 +167,7 @@ export default function AltaEquipoPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-400">No. de activo</label>
+            <label className="mb-1 block text-sm font-medium text-tinta-2">No. de activo</label>
             <input
               className={`${campo} font-mono`}
               value={numActivo}
@@ -179,7 +179,7 @@ export default function AltaEquipoPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-semibold text-slate-400">Almacén *</label>
+          <label className="mb-1 block text-sm font-medium text-tinta-2">Almacén *</label>
           <select className={campo} value={almacenId} onChange={(e) => setAlmacenId(e.target.value)}>
             <option value="">Elegir almacén…</option>
             {almacenes.map((a) => (
@@ -191,14 +191,14 @@ export default function AltaEquipoPage() {
         </div>
 
         {error && (
-          <p className="rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300 ring-1 ring-red-500/30">
+          <p className="rounded-xl bg-peligro-bg px-3 py-2 text-sm font-medium text-peligro-tx">
             {error}
           </p>
         )}
 
         <button
           type="submit"
-          className="h-16 w-full rounded-xl bg-emerald-500 text-lg font-bold text-emerald-950 active:bg-emerald-400 disabled:opacity-40"
+          className="h-16 w-full rounded-2xl bg-gradient-to-br from-cian to-cian-600 text-lg font-bold text-white shadow-cian active:opacity-90 disabled:opacity-40"
           disabled={!puedeGuardar || guardando}
         >
           {guardando ? 'Guardando…' : 'Registrar equipo'}

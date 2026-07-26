@@ -27,17 +27,17 @@ export function CapturaManual({ abierta, onConfirmar, onCerrar }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/80">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-marino-900/70">
       <form
-        className="w-full max-w-md rounded-t-2xl bg-slate-800 p-5 pb-8"
+        className="w-full max-w-md rounded-t-2xl bg-white p-5 pb-8"
         onSubmit={(e) => {
           e.preventDefault()
           confirmar()
         }}
       >
-        <h2 className="mb-3 text-lg font-bold text-slate-100">Teclear número de serie</h2>
+        <h2 className="mb-3 text-lg font-bold text-tinta">Teclear número de serie</h2>
         <input
-          className="w-full rounded-lg border-2 border-slate-500 bg-slate-900 p-4 font-mono text-2xl text-slate-100 focus:border-emerald-400 focus:outline-none"
+          className="w-full rounded-xl border-2 border-cian bg-white p-4 font-mono text-2xl text-tinta shadow-[0_2px_6px_rgba(18,181,201,.12)] placeholder:text-tinta-3 focus:outline-none"
           value={numeroSerie}
           onChange={(e) => setNumeroSerie(e.target.value)}
           autoFocus
@@ -50,7 +50,7 @@ export function CapturaManual({ abierta, onConfirmar, onCerrar }: Props) {
           {onCerrar !== undefined && (
             <button
               type="button"
-              className="h-14 flex-1 rounded-lg bg-slate-600 text-lg font-bold text-slate-100 active:bg-slate-500"
+              className="h-14 flex-1 rounded-xl bg-panel text-lg font-bold text-tinta ring-1 ring-borde active:bg-borde"
               onClick={() => {
                 setNumeroSerie('')
                 onCerrar()
@@ -61,7 +61,7 @@ export function CapturaManual({ abierta, onConfirmar, onCerrar }: Props) {
           )}
           <button
             type="submit"
-            className="h-14 flex-1 rounded-lg bg-emerald-500 text-lg font-bold text-emerald-950 active:bg-emerald-400 disabled:opacity-40"
+            className="h-14 flex-1 rounded-xl bg-gradient-to-br from-cian to-cian-600 text-lg font-bold text-white shadow-cian active:opacity-90 disabled:opacity-40"
             disabled={numeroSerie.trim() === ''}
           >
             Registrar

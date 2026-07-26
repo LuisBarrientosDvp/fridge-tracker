@@ -29,6 +29,16 @@ de venta de la Comarca Lagunera. PWA fullstack sobre **Zoho Catalyst**.
 - **Roles**: `ADMIN` (superadmin: reportes globales + todo), `ENCARGADO`
   (escanear + su almacén), `TECNICO` (solo escanear). Los permisos se validan
   en el backend, no solo en la interfaz.
+- **Gestión de usuarios desde la app** (solo ADMIN): invitar por correo
+  (Catalyst manda el email para fijar contraseña), asignar rol y almacén,
+  desactivar/reactivar — sin tocar la consola de Catalyst.
+
+## Diseño
+
+Tema claro con marino `#1F3A5F` + cian `#12B5C9`, tarjetas blancas, pastillas
+de estatus con punto de color y Roboto; la pantalla de escaneo es oscura con
+brackets cian de encuadre. Tokens en `react-app/tailwind.config.js` (ver
+sección "Design system" de `CLAUDE.md`).
 
 ## Stack
 
@@ -63,7 +73,7 @@ catalyst deploy          # desde la raíz del repo (cliente + funciones)
 ├── functions/api/       Advanced I/O Function (Express): todos los endpoints
 └── react-app/           Cliente React (PWA)
     └── src/
-        ├── pages/       Login, Menú, Escaneo, Ficha, Alta, Reportes, Almacén
+        ├── pages/       Login, Menú, Escaneo, Ficha, Alta, Reportes, Almacén, Usuarios
         ├── components/  UI compartida, buscador de lugares, captura manual
         ├── services/    ÚNICA puerta a dispositivo y red (scanner, api, auth…)
         ├── context/     Sesión (estado de login + usuario + rol)

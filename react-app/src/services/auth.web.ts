@@ -4,6 +4,19 @@ function sdk() {
   return window.catalyst
 }
 
+// El SDK puede colgarse en dispositivos sin sesión (su flujo interno de
+// clientoauth dispara una petición con jwt_token=undefined que muere por CORS
+// y la promesa nunca se resuelve → "Verificando sesión" eterno). Todo lo que
+// venga del SDK corre con timeout.
+function conTimeout<T>(promesa: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promesa,
+    new Promise<never>((_, rechazar) =>
+      window.setTimeout(() => rechazar(new Error('timeout del SDK')), ms),
+    ),
+  ])
+}
+
 function leerCookie(nombre: string): string | null {
   const partes = document.cookie.split('; ')
   for (const parte of partes) {
@@ -23,7 +36,7 @@ export const authWeb: AuthService = {
     const catalyst = sdk()
     if (!catalyst) return false
     try {
-      const r: any = await catalyst.auth.isUserAuthenticated()
+      const r: any = await conTimeout(catalyst.auth.isUserAuthenticated(), 6000)
       return Boolean(r)
     } catch {
       return false
@@ -58,12 +71,16 @@ export const authWeb: AuthService = {
     // Camino 1 (spec §1.2): token de una hora en el header Authorization.
     try {
       if (catalyst?.auth.generateAuthToken) {
-        const t: any = await catalyst.auth.generateAuthToken()
+        const t: any = await conTimeout(catalyst.auth.generateAuthToken(), 6000)
         const token = t?.access_token ?? t?.content?.access_token
-        if (token) headers['Authorization'] = `Bearer ${token}`
+        // Token CRUDO, sin prefijo "Bearer": el gateway de Catalyst rechaza
+        // el header con prefijo y el backend respondería 401.
+        if (token) headers['Authorization'] = token
       }
     } catch {
-      // Sin token: mismo dominio → las cookies de sesión autentican igual.
+      // Sin token (sin sesión, timeout o CORS): mismo dominio → las cookies
+      // de sesión autentican igual; sin cookies el backend responde 401 y la
+      // app muestra el login en vez de colgarse.
     }
     // Camino 2: cookies del mismo dominio + header CSRF que exige Catalyst
     // en peticiones de escritura autenticadas por cookie.

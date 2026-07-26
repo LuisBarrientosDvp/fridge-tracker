@@ -72,15 +72,15 @@ export function BuscadorLugar({ tipo, onElegir, onCancelar }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/80 sm:items-center">
-      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-slate-800 p-5 sm:rounded-2xl">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-marino-900/70 sm:items-center">
+      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 sm:rounded-2xl">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-100">
+          <h2 className="text-lg font-bold text-tinta">
             {tipo === 'PUNTO_VENTA' ? 'Punto de venta' : 'Taller externo'}
           </h2>
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-300"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-panel text-tinta-2 ring-1 ring-borde"
             onClick={onCancelar}
           >
             ✕
@@ -88,7 +88,7 @@ export function BuscadorLugar({ tipo, onElegir, onCancelar }: Props) {
         </div>
 
         <input
-          className="w-full rounded-lg border-2 border-slate-600 bg-slate-900 p-3 text-lg text-slate-100 focus:border-emerald-400 focus:outline-none"
+          className="w-full rounded-xl border-2 border-cian bg-white p-3 text-lg text-tinta shadow-[0_2px_6px_rgba(18,181,201,.12)] placeholder:text-tinta-3 focus:outline-none"
           placeholder={`Nombre del ${etiqueta}…`}
           value={consulta}
           onChange={(e) => setConsulta(e.target.value)}
@@ -103,11 +103,11 @@ export function BuscadorLugar({ tipo, onElegir, onCancelar }: Props) {
               <li key={lugar.ROWID}>
                 <button
                   type="button"
-                  className="w-full rounded-lg bg-slate-700/70 p-3 text-left active:bg-slate-600"
+                  className="w-full rounded-xl border border-borde bg-white p-3 text-left shadow-carta active:bg-cian-50"
                   onClick={() => onElegir(lugar)}
                 >
-                  <p className="font-semibold text-slate-100">{lugar.nombre}</p>
-                  {lugar.municipio && <p className="text-xs text-slate-400">{lugar.municipio}</p>}
+                  <p className="font-semibold text-tinta">{lugar.nombre}</p>
+                  {lugar.municipio && <p className="text-xs text-tinta-2">{lugar.municipio}</p>}
                 </button>
               </li>
             ))}
@@ -117,7 +117,7 @@ export function BuscadorLugar({ tipo, onElegir, onCancelar }: Props) {
         {buscado && !creando && (
           <button
             type="button"
-            className="mt-3 h-12 w-full rounded-lg bg-sky-500/20 font-bold text-sky-300 ring-1 ring-sky-400/40 active:bg-sky-500/30"
+            className="mt-3 h-12 w-full rounded-xl bg-cian-50 font-bold text-cian-600 ring-1 ring-cian/40 active:bg-cian-100"
             onClick={() => setCreando(true)}
           >
             + Crear «{consulta.trim()}» como {etiqueta} nuevo
@@ -125,30 +125,30 @@ export function BuscadorLugar({ tipo, onElegir, onCancelar }: Props) {
         )}
 
         {creando && (
-          <div className="mt-3 space-y-2 rounded-xl bg-slate-900/60 p-3">
+          <div className="mt-3 space-y-2 rounded-xl bg-panel p-3 ring-1 ring-borde">
             <input
-              className="w-full rounded-lg border border-slate-600 bg-slate-900 p-3 text-slate-100 focus:border-emerald-400 focus:outline-none"
+              className="w-full rounded-xl border border-borde bg-white p-3 text-tinta placeholder:text-tinta-3 focus:border-cian focus:outline-none"
               placeholder="Municipio (opcional)"
               value={municipio}
               onChange={(e) => setMunicipio(e.target.value)}
             />
             <input
-              className="w-full rounded-lg border border-slate-600 bg-slate-900 p-3 text-slate-100 focus:border-emerald-400 focus:outline-none"
+              className="w-full rounded-xl border border-borde bg-white p-3 text-tinta placeholder:text-tinta-3 focus:border-cian focus:outline-none"
               placeholder="Nombre del encargado (opcional)"
               value={contacto}
               onChange={(e) => setContacto(e.target.value)}
             />
             <input
-              className="w-full rounded-lg border border-slate-600 bg-slate-900 p-3 text-slate-100 focus:border-emerald-400 focus:outline-none"
+              className="w-full rounded-xl border border-borde bg-white p-3 text-tinta placeholder:text-tinta-3 focus:border-cian focus:outline-none"
               placeholder="Teléfono (opcional)"
               inputMode="tel"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
             />
-            {error && <p className="text-sm text-red-300">{error}</p>}
+            {error && <p className="text-sm font-medium text-peligro-tx">{error}</p>}
             <button
               type="button"
-              className="h-12 w-full rounded-lg bg-emerald-500 font-bold text-emerald-950 active:bg-emerald-400 disabled:opacity-40"
+              className="h-12 w-full rounded-xl bg-gradient-to-br from-cian to-cian-600 font-bold text-white shadow-cian active:opacity-90 disabled:opacity-40"
               disabled={guardando}
               onClick={() => void crear()}
             >

@@ -11,7 +11,7 @@ export function ContadorPendientes() {
     <Link
       to="/debug"
       className={`fixed top-3 right-3 z-50 rounded-full px-4 py-2 text-sm font-bold shadow-lg ${
-        pendientes > 0 ? 'bg-amber-400 text-amber-950' : 'bg-slate-700 text-slate-300'
+        pendientes > 0 ? 'bg-alerta-dot text-white' : 'bg-marino text-marino-300'
       }`}
     >
       {pendientes} por sincronizar

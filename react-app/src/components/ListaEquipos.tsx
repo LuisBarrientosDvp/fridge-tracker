@@ -83,14 +83,14 @@ export function ListaEquipos({ almacenFijo, conAlmacenes = false, conTotales = f
     equipos.filter((e) => e.estatus_ubicacion === u).length
 
   const select =
-    'h-11 rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-slate-200 focus:border-emerald-400 focus:outline-none'
+    'h-11 rounded-lg border border-borde bg-white px-2 text-sm font-medium text-tinta shadow-carta focus:border-cian focus:outline-none'
 
   return (
     <div className="space-y-4">
       {/* Filtros */}
       <div className="space-y-2">
         <input
-          className="h-12 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 text-slate-100 placeholder:text-slate-600 focus:border-emerald-400 focus:outline-none"
+          className="h-12 w-full rounded-xl border border-borde bg-white px-4 text-tinta shadow-carta placeholder:text-tinta-3 focus:border-cian focus:outline-none"
           placeholder="Buscar por serial, activo o modelo…"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
@@ -137,10 +137,10 @@ export function ListaEquipos({ almacenFijo, conAlmacenes = false, conTotales = f
       {/* Totales */}
       {conTotales && equipos.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Total etiqueta="Equipos" valor={equipos.length + (hayMas ? '+' : '')} color="text-slate-100" />
-          <Total etiqueta="Operativos" valor={totalPorCondicion('OPERATIVO')} color="text-emerald-300" />
-          <Total etiqueta="En reparación" valor={totalPorUbicacion('EN_REPARACION')} color="text-amber-300" />
-          <Total etiqueta="Chatarra" valor={totalPorCondicion('CHATARRA')} color="text-red-300" />
+          <Total etiqueta="Equipos" valor={equipos.length + (hayMas ? '+' : '')} color="text-tinta" />
+          <Total etiqueta="Operativos" valor={totalPorCondicion('OPERATIVO')} color="text-exito-tx" />
+          <Total etiqueta="En reparación" valor={totalPorUbicacion('EN_REPARACION')} color="text-alerta-tx" />
+          <Total etiqueta="Chatarra" valor={totalPorCondicion('CHATARRA')} color="text-peligro-tx" />
         </div>
       )}
 
@@ -156,7 +156,7 @@ export function ListaEquipos({ almacenFijo, conAlmacenes = false, conTotales = f
       {cargando && <Cargando texto="Cargando inventario…" />}
 
       {!cargando && equipos.length === 0 && !error && (
-        <p className="py-10 text-center text-sm text-slate-600">
+        <p className="py-10 text-center text-sm text-tinta-3">
           Sin equipos con estos filtros. Los equipos dados de alta al escanear aparecerán aquí.
         </p>
       )}
@@ -164,7 +164,7 @@ export function ListaEquipos({ almacenFijo, conAlmacenes = false, conTotales = f
       {hayMas && !cargando && (
         <button
           type="button"
-          className="h-12 w-full rounded-xl bg-slate-800 font-bold text-slate-200 ring-1 ring-slate-700 active:bg-slate-700"
+          className="h-12 w-full rounded-xl bg-white font-bold text-tinta shadow-carta ring-1 ring-borde active:bg-cian-50"
           onClick={() => void cargar(pagina + 1, true)}
         >
           Cargar más
@@ -176,9 +176,9 @@ export function ListaEquipos({ almacenFijo, conAlmacenes = false, conTotales = f
 
 function Total({ etiqueta, valor, color }: { etiqueta: string; valor: number | string; color: string }) {
   return (
-    <div className="rounded-xl bg-slate-800/80 p-3 text-center ring-1 ring-slate-700">
+    <div className="rounded-carta border border-borde bg-white p-3 text-center shadow-carta">
       <p className={`text-2xl font-black ${color}`}>{valor}</p>
-      <p className="text-xs text-slate-500">{etiqueta}</p>
+      <p className="text-xs text-tinta-2">{etiqueta}</p>
     </div>
   )
 }

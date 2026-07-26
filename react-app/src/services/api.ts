@@ -12,7 +12,7 @@ import type {
   Movimiento,
   Usuario,
 } from '../types/api'
-import type { EstatusCondicion, EstatusUbicacion, ReparacionTipo } from '../types/estatus'
+import type { EstatusCondicion, EstatusUbicacion, ReparacionTipo, Rol } from '../types/estatus'
 import { authWeb as auth } from './auth.web'
 
 const BASE = '/server/api'
@@ -96,8 +96,39 @@ export interface NuevoLugar {
   lng?: number
 }
 
+export interface InvitacionUsuario {
+  correo: string
+  nombre: string
+  rol: Rol
+  almacen_id?: string
+  telefono?: string
+}
+
+export interface CambioUsuario {
+  rol?: Rol
+  almacen_id?: string | null
+  activo?: boolean
+  nombre?: string
+  telefono?: string | null
+}
+
 export const api = {
   yo: () => llamar<{ usuario: Usuario }>('/yo'),
+
+  // --- usuarios (solo ADMIN) ---
+  listarUsuarios: () => llamar<{ data: Usuario[] }>('/usuarios'),
+
+  invitarUsuario: (datos: InvitacionUsuario) =>
+    llamar<{ usuario: Usuario; invitado: boolean }>('/usuarios', {
+      method: 'POST',
+      body: JSON.stringify(datos),
+    }),
+
+  actualizarUsuario: (id: string, cambios: CambioUsuario) =>
+    llamar<{ usuario: Usuario }>(`/usuarios/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(cambios),
+    }),
 
   resolverCodigo: (codigo: string) =>
     llamar<{ equipo: Equipo; codigo: CodigoEquipo }>(`/codigos/${encodeURIComponent(codigo)}`),

@@ -4,3 +4,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Tema claro del design system: fondo lienzo, texto tinta, Roboto. */
+body {
+  @apply bg-lienzo font-sans text-tinta antialiased;
+}

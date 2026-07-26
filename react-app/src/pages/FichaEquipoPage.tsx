@@ -11,6 +11,7 @@ import {
   ESTATUS_CONDICION,
   ETIQUETA_CONDICION,
   ETIQUETA_UBICACION,
+  PUNTO_CONDICION,
   type EstatusCondicion,
 } from '../types/estatus'
 
@@ -30,6 +31,15 @@ const ETIQUETA_EVENTO: Record<Movimiento['tipo_evento'], string> = {
   CAMBIO_CONDICION: 'Cambio de condición',
   TRASLADO: 'Traslado de almacén',
   REPARACION: 'Reparación',
+}
+
+// Color del punto del historial según el tipo de evento (design: timeline).
+const PUNTO_EVENTO: Record<Movimiento['tipo_evento'], string> = {
+  ALTA: 'bg-cian',
+  CAMBIO_UBICACION: 'bg-marino',
+  CAMBIO_CONDICION: 'bg-exito-dot',
+  TRASLADO: 'bg-marino-700',
+  REPARACION: 'bg-alerta-dot',
 }
 
 export default function FichaEquipoPage() {
@@ -145,7 +155,7 @@ export default function FichaEquipoPage() {
 
   if (cargando) {
     return (
-      <main className="min-h-dvh bg-slate-950">
+      <main className="min-h-dvh bg-lienzo">
         <Cabecera titulo="Ficha del equipo" />
         <Cargando />
       </main>
@@ -153,7 +163,7 @@ export default function FichaEquipoPage() {
   }
   if (!equipo) {
     return (
-      <main className="min-h-dvh bg-slate-950 pt-6">
+      <main className="min-h-dvh bg-lienzo pt-6">
         <Cabecera titulo="Ficha del equipo" />
         <div className="p-4">
           <MensajeError texto={error || 'Equipo no encontrado'} />
@@ -165,7 +175,7 @@ export default function FichaEquipoPage() {
   const esAdmin = usuario?.rol === 'ADMIN'
 
   return (
-    <main className="min-h-dvh bg-slate-950 pb-16">
+    <main className="min-h-dvh bg-lienzo pb-16">
       <Cabecera
         titulo={`${equipo.marca}${equipo.modelo ? ` · ${equipo.modelo}` : ''}`}
         subtitulo={equipo.equipo_tipo}
@@ -175,54 +185,42 @@ export default function FichaEquipoPage() {
         {aviso && (
           <p
             className={`rounded-xl px-4 py-3 text-sm font-semibold ${
-              aviso.startsWith('✓')
-                ? 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30'
-                : 'bg-red-500/15 text-red-300 ring-1 ring-red-500/30'
+              aviso.startsWith('✓') ? 'bg-exito-bg text-exito-tx' : 'bg-peligro-bg text-peligro-tx'
             }`}
           >
             {aviso}
           </p>
         )}
 
-        {/* Identificación */}
-        <section className="rounded-2xl bg-slate-800/80 p-4 ring-1 ring-slate-700">
-          <div className="mb-3 flex flex-wrap gap-2">
+        {/* Identificación: serial grande + insignias (design pantalla 3) */}
+        <section className="rounded-carta border border-borde bg-white p-4 shadow-carta">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-tinta-3">NÚMERO DE SERIE</p>
+              <p className="break-all font-mono text-xl font-black tracking-tight text-tinta">
+                {equipo.serial ?? 'sin serial'}
+              </p>
+            </div>
+          </div>
+          <div className="mb-4 flex flex-wrap gap-2">
             <InsigniaUbicacion equipo={equipo} />
             <InsigniaCondicion equipo={equipo} />
           </div>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
-            <div>
-              <dt className="text-slate-500">Serial</dt>
-              <dd className="break-all font-mono text-slate-200">{equipo.serial ?? 'sin serial'}</dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">No. activo</dt>
-              <dd className="font-mono text-slate-200">{equipo.num_activo ?? '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">Año</dt>
-              <dd className="text-slate-200">{equipo.anio ?? '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">Cerveza</dt>
-              <dd className="text-slate-200">{equipo.cerveza ?? '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">Almacén casa</dt>
-              <dd className="text-slate-200">{nombreAlmacen(equipo.almacen_id)}</dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">Origen</dt>
-              <dd className="text-slate-200">
-                {equipo.origen_registro === 'CAMPO' ? 'Alta en campo' : 'Importación'}
-              </dd>
-            </div>
+          <dl className="divide-y divide-divisor text-sm">
+            <FilaDato etiqueta="No. activo" valor={equipo.num_activo ?? '—'} mono />
+            <FilaDato etiqueta="Año" valor={equipo.anio ?? '—'} />
+            <FilaDato etiqueta="Cerveza" valor={equipo.cerveza ?? '—'} />
+            <FilaDato etiqueta="Almacén casa" valor={nombreAlmacen(equipo.almacen_id)} />
+            <FilaDato
+              etiqueta="Origen"
+              valor={equipo.origen_registro === 'CAMPO' ? 'Alta en campo' : 'Importación'}
+            />
           </dl>
           {codigos.length > 0 && (
-            <p className="mt-3 border-t border-slate-700 pt-2 text-xs text-slate-500">
+            <p className="mt-3 border-t border-divisor pt-2 text-xs text-tinta-3">
               Códigos:{' '}
               {codigos.map((c) => (
-                <span key={c.ROWID} className="mr-2 font-mono text-slate-400">
+                <span key={c.ROWID} className="mr-2 font-mono text-tinta-2">
                   {c.codigo} ({c.formato})
                 </span>
               ))}
@@ -232,46 +230,34 @@ export default function FichaEquipoPage() {
 
         {/* Acciones */}
         <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <button
-            type="button"
-            className="h-20 rounded-xl bg-sky-500/15 text-sm font-bold text-sky-300 ring-1 ring-sky-500/30 active:bg-sky-500/25"
+          <BotonAccion
+            emoji="📍"
+            titulo="Cambiar"
+            subtitulo="ubicación"
             onClick={() => setPanel('ubicacion')}
-          >
-            📍 Cambiar
-            <br />
-            ubicación
-          </button>
-          <button
-            type="button"
-            className="h-20 rounded-xl bg-amber-500/15 text-sm font-bold text-amber-300 ring-1 ring-amber-500/30 active:bg-amber-500/25"
+          />
+          <BotonAccion
+            emoji="🔧"
+            titulo="Cambiar"
+            subtitulo="condición"
             onClick={() => setPanel('condicion')}
-          >
-            🔧 Cambiar
-            <br />
-            condición
-          </button>
-          <button
-            type="button"
-            className="h-20 rounded-xl bg-slate-700/60 text-sm font-bold text-slate-200 ring-1 ring-slate-600 active:bg-slate-600 disabled:opacity-40"
+          />
+          <BotonAccion
+            emoji="🏷"
+            titulo="Etiqueta"
+            subtitulo="QR"
+            deshabilitado={!equipo.serial}
             onClick={() => setPanel('qr')}
-            disabled={!equipo.serial}
-          >
-            🏷 Etiqueta
-            <br />
-            QR
-          </button>
+          />
           {esAdmin ? (
-            <button
-              type="button"
-              className="h-20 rounded-xl bg-violet-500/15 text-sm font-bold text-violet-300 ring-1 ring-violet-500/30 active:bg-violet-500/25"
+            <BotonAccion
+              emoji="🏬"
+              titulo="Cambiar"
+              subtitulo="almacén"
               onClick={() => setPanel('almacen')}
-            >
-              🏬 Cambiar
-              <br />
-              almacén
-            </button>
+            />
           ) : (
-            <div className="flex h-20 items-center justify-center rounded-xl bg-slate-900 text-center text-xs text-slate-600 ring-1 ring-slate-800">
+            <div className="flex h-20 items-center justify-center rounded-carta border border-borde bg-panel text-center text-xs text-tinta-3">
               Cambio de almacén:
               <br />
               solo admin
@@ -279,37 +265,41 @@ export default function FichaEquipoPage() {
           )}
         </section>
 
-        {/* Historial */}
-        <section>
-          <h2 className="mb-2 mt-2 text-sm font-bold uppercase tracking-wide text-slate-500">
+        {/* Historial: línea de tiempo del design */}
+        <section className="rounded-carta border border-borde bg-white p-4 shadow-carta">
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-wide text-tinta-3">
             Historial de movimientos
           </h2>
-          <ol className="space-y-2">
-            {movimientos.map((m) => (
-              <li key={m.ROWID} className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700/60">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="font-semibold text-slate-200">
-                    {ETIQUETA_EVENTO[m.tipo_evento] ?? m.tipo_evento}
-                  </span>
-                  <span className="shrink-0 text-xs text-slate-500">{m.fecha_evento}</span>
-                </div>
-                <p className="mt-0.5 text-sm text-slate-400">
-                  {m.estatus_ubicacion_nuevo &&
-                    `→ ${ETIQUETA_UBICACION[m.estatus_ubicacion_nuevo]}`}
-                  {m.estatus_condicion_nuevo &&
-                    ` → ${ETIQUETA_CONDICION[m.estatus_condicion_nuevo]}`}
-                  {m.tipo_evento === 'TRASLADO' &&
-                    ` ${nombreAlmacen(m.almacen_anterior_id)} → ${nombreAlmacen(m.almacen_nuevo_id)}`}
-                </p>
-                {m.nota && <p className="mt-1 text-sm italic text-slate-500">“{m.nota}”</p>}
-              </li>
-            ))}
-            {movimientos.length === 0 && (
-              <li className="rounded-xl bg-slate-900 p-4 text-center text-sm text-slate-600">
-                Sin movimientos registrados
-              </li>
-            )}
-          </ol>
+          {movimientos.length > 0 ? (
+            <ol className="relative space-y-4 pl-6">
+              <span className="absolute bottom-2 left-[5px] top-1.5 w-0.5 bg-divisor" aria-hidden />
+              {movimientos.map((m) => (
+                <li key={m.ROWID} className="relative">
+                  <span
+                    className={`absolute -left-6 top-1 h-3 w-3 rounded-full border-2 border-white shadow-[0_0_0_2px_#EEF3F6] ${PUNTO_EVENTO[m.tipo_evento] ?? 'bg-tinta-3'}`}
+                    aria-hidden
+                  />
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-medium text-tinta">
+                      {ETIQUETA_EVENTO[m.tipo_evento] ?? m.tipo_evento}
+                    </span>
+                    <span className="shrink-0 text-xs text-tinta-3">{m.fecha_evento}</span>
+                  </div>
+                  <p className="mt-0.5 text-sm text-tinta-2">
+                    {m.estatus_ubicacion_nuevo &&
+                      `→ ${ETIQUETA_UBICACION[m.estatus_ubicacion_nuevo]}`}
+                    {m.estatus_condicion_nuevo &&
+                      ` → ${ETIQUETA_CONDICION[m.estatus_condicion_nuevo]}`}
+                    {m.tipo_evento === 'TRASLADO' &&
+                      ` ${nombreAlmacen(m.almacen_anterior_id)} → ${nombreAlmacen(m.almacen_nuevo_id)}`}
+                  </p>
+                  {m.nota && <p className="mt-1 text-sm italic text-tinta-3">“{m.nota}”</p>}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="py-4 text-center text-sm text-tinta-3">Sin movimientos registrados</p>
+          )}
         </section>
       </div>
 
@@ -409,7 +399,7 @@ export default function FichaEquipoPage() {
           {ESTATUS_CONDICION.map((c: EstatusCondicion) => (
             <BotonPanel
               key={c}
-              emoji={c === 'OPERATIVO' ? '✅' : c === 'MANTENIMIENTO' ? '🔧' : c === 'REFURBISH' ? '♻️' : '🗑'}
+              punto={PUNTO_CONDICION[c]}
               texto={ETIQUETA_CONDICION[c]}
               deshabilitado={guardando || equipo.estatus_condicion === c}
               onClick={() => void mover({ estatus_condicion: c })}
@@ -436,22 +426,22 @@ export default function FichaEquipoPage() {
       )}
 
       {panel === 'qr' && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/90 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 text-center">
-            <h2 className="mb-1 text-lg font-bold text-slate-900">Etiqueta QR</h2>
-            <p className="mb-3 break-all font-mono text-sm text-slate-500">{equipo.serial}</p>
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-marino-900/80 p-4">
+          <div className="w-full max-w-sm rounded-carta bg-white p-5 text-center shadow-marino">
+            <h2 className="mb-1 text-lg font-bold text-tinta">Etiqueta QR</h2>
+            <p className="mb-3 break-all font-mono text-sm text-tinta-2">{equipo.serial}</p>
             <canvas ref={qrRef} className="mx-auto aspect-square w-full max-w-[280px]" />
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
-                className="h-12 flex-1 rounded-lg bg-slate-200 font-bold text-slate-800"
+                className="h-12 flex-1 rounded-xl bg-panel font-bold text-tinta ring-1 ring-borde active:bg-borde"
                 onClick={() => setPanel(null)}
               >
                 Cerrar
               </button>
               <button
                 type="button"
-                className="h-12 flex-1 rounded-lg bg-emerald-500 font-bold text-emerald-950"
+                className="h-12 flex-1 rounded-xl bg-gradient-to-br from-cian to-cian-600 font-bold text-white shadow-cian active:opacity-90"
                 onClick={descargarQR}
               >
                 ⬇ Descargar PNG
@@ -466,6 +456,57 @@ export default function FichaEquipoPage() {
 
 // ---------- piezas locales ----------
 
+function FilaDato({
+  etiqueta,
+  valor,
+  mono = false,
+}: {
+  etiqueta: string
+  valor: string | number
+  mono?: boolean
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-2.5">
+      <dt className="text-tinta-2">{etiqueta}</dt>
+      <dd className={`text-right font-medium text-tinta ${mono ? 'break-all font-mono' : ''}`}>
+        {valor}
+      </dd>
+    </div>
+  )
+}
+
+function BotonAccion({
+  emoji,
+  titulo,
+  subtitulo,
+  deshabilitado,
+  onClick,
+}: {
+  emoji: string
+  titulo: string
+  subtitulo: string
+  deshabilitado?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className="flex h-20 flex-col items-center justify-center gap-1 rounded-carta border border-borde bg-white text-sm font-bold text-tinta shadow-carta active:bg-cian-50 disabled:opacity-40"
+      disabled={deshabilitado}
+      onClick={onClick}
+    >
+      <span className="text-xl" aria-hidden>
+        {emoji}
+      </span>
+      <span className="leading-tight">
+        {titulo}
+        <br />
+        {subtitulo}
+      </span>
+    </button>
+  )
+}
+
 function PanelInferior({
   titulo,
   onCerrar,
@@ -476,13 +517,13 @@ function PanelInferior({
   children: React.ReactNode
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/80 sm:items-center">
-      <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-slate-800 p-5 sm:rounded-2xl">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-marino-900/70 sm:items-center">
+      <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 sm:rounded-2xl">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-100">{titulo}</h2>
+          <h2 className="text-lg font-bold text-tinta">{titulo}</h2>
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-slate-300"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-panel text-tinta-2 ring-1 ring-borde"
             onClick={onCerrar}
           >
             ✕
@@ -496,12 +537,14 @@ function PanelInferior({
 
 function BotonPanel({
   emoji,
+  punto,
   texto,
   detalle,
   deshabilitado,
   onClick,
 }: {
-  emoji: string
+  emoji?: string
+  punto?: string // clase de color para punto de estatus (alternativa al emoji)
   texto: string
   detalle?: string
   deshabilitado?: boolean
@@ -510,14 +553,20 @@ function BotonPanel({
   return (
     <button
       type="button"
-      className="flex w-full items-center gap-3 rounded-xl bg-slate-700/70 p-4 text-left active:bg-slate-600 disabled:opacity-40"
+      className="flex w-full items-center gap-3 rounded-carta border border-borde bg-white p-4 text-left shadow-carta active:bg-cian-50 disabled:opacity-40"
       disabled={deshabilitado}
       onClick={onClick}
     >
-      <span className="text-2xl">{emoji}</span>
+      {punto ? (
+        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${punto}`} aria-hidden />
+      ) : (
+        <span className="text-2xl" aria-hidden>
+          {emoji}
+        </span>
+      )}
       <span className="min-w-0">
-        <span className="block font-bold text-slate-100">{texto}</span>
-        {detalle && <span className="block text-sm text-slate-400">{detalle}</span>}
+        <span className="block font-bold text-tinta">{texto}</span>
+        {detalle && <span className="block text-sm text-tinta-2">{detalle}</span>}
       </span>
     </button>
   )

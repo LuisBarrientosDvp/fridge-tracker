@@ -34,7 +34,14 @@ export const haptics: HapticsService = hapticsWeb
 export const auth: AuthService = authWeb
 
 export { api, ApiError } from './api'
-export type { AltaEquipo, CambioEstatus, FiltrosEquipos, NuevoLugar } from './api'
+export type {
+  AltaEquipo,
+  CambioEstatus,
+  CambioUsuario,
+  FiltrosEquipos,
+  InvitacionUsuario,
+  NuevoLugar,
+} from './api'
 export type { AuthService } from './auth'
 export type { LecturaCodigo, ScannerService, SesionEscaneo } from './scanner'
 export type { EventoEncolado, SyncQueue } from './storage'

@@ -34,16 +34,30 @@ export const ETIQUETA_CONDICION: Record<EstatusCondicion, string> = {
   CHATARRA: 'Chatarra',
 }
 
-// Clases Tailwind por estatus, para insignias consistentes en toda la app.
+// Clases Tailwind por estatus (design system: pastilla clara + punto de
+// color), para insignias consistentes en toda la app.
 export const COLOR_UBICACION: Record<EstatusUbicacion, string> = {
-  EN_ALMACEN: 'bg-slate-500/20 text-slate-200 ring-slate-400/40',
-  EN_UBICACION: 'bg-sky-500/20 text-sky-300 ring-sky-400/40',
-  EN_REPARACION: 'bg-amber-500/20 text-amber-300 ring-amber-400/40',
+  EN_ALMACEN: 'bg-marino-100 text-marino',
+  EN_UBICACION: 'bg-cian-100 text-cian-600',
+  EN_REPARACION: 'bg-alerta-bg text-alerta-tx',
+}
+
+export const PUNTO_UBICACION: Record<EstatusUbicacion, string> = {
+  EN_ALMACEN: 'bg-marino',
+  EN_UBICACION: 'bg-cian',
+  EN_REPARACION: 'bg-alerta-dot',
 }
 
 export const COLOR_CONDICION: Record<EstatusCondicion, string> = {
-  OPERATIVO: 'bg-emerald-500/20 text-emerald-300 ring-emerald-400/40',
-  MANTENIMIENTO: 'bg-amber-500/20 text-amber-300 ring-amber-400/40',
-  REFURBISH: 'bg-violet-500/20 text-violet-300 ring-violet-400/40',
-  CHATARRA: 'bg-red-500/20 text-red-300 ring-red-400/40',
+  OPERATIVO: 'bg-exito-bg text-exito-tx',
+  MANTENIMIENTO: 'bg-alerta-bg text-alerta-tx',
+  REFURBISH: 'bg-refur-bg text-refur-tx',
+  CHATARRA: 'bg-peligro-bg text-peligro-tx',
+}
+
+export const PUNTO_CONDICION: Record<EstatusCondicion, string> = {
+  OPERATIVO: 'bg-exito-dot',
+  MANTENIMIENTO: 'bg-alerta-dot',
+  REFURBISH: 'bg-cian',
+  CHATARRA: 'bg-peligro-dot',
 }
