@@ -63,6 +63,13 @@ Reglas vigentes:
   promesa nunca se resuelve → "Verificando sesión" eterno. Con el timeout la
   llamada sigue sin token, el backend responde 401 y aparece el login. La
   pantalla de verificación además ofrece "Cerrar sesión" a los 8 s.
+- **El SDK solo se toca si existe la cookie `ZD_CSRF_TOKEN`** (pista de que
+  hubo login en este dominio): sin ella `encabezados()` y `estaAutenticado()`
+  regresan de inmediato — cero llamadas a clientoauth, cero ruido CORS, login
+  instantáneo en dispositivos nuevos.
+- El TypeError `trackNoPwdContainer ... e is null` en la consola del login
+  hospedado viene del script de Zoho (`catalyst_hosted_login_page-*.min.js`),
+  no de nuestra app; es cosmético y no bloquea el formulario.
 - **No usar API Gateway** para la PWA (API key expuesta, no identifica
   usuario, deshabilita Security Rules). Solo tendría sentido para un ERP
   externo futuro.

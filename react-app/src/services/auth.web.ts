@@ -35,6 +35,10 @@ export const authWeb: AuthService = {
   async estaAutenticado(): Promise<boolean> {
     const catalyst = sdk()
     if (!catalyst) return false
+    // Sin cookie de sesión no hay nada que verificar: preguntar al SDK sin
+    // sesión dispara su flujo interno de clientoauth con jwt_token=undefined
+    // (ruido CORS en consola y segundos perdidos).
+    if (!leerCookie('ZD_CSRF_TOKEN')) return false
     try {
       const r: any = await conTimeout(catalyst.auth.isUserAuthenticated(), 6000)
       return Boolean(r)
@@ -68,6 +72,13 @@ export const authWeb: AuthService = {
   async encabezados(): Promise<Record<string, string>> {
     const headers: Record<string, string> = {}
     const catalyst = sdk()
+    // Pista barata de sesión: la cookie ZD_CSRF_TOKEN solo existe tras un
+    // login en este dominio. Sin ella NO se toca el SDK — generateAuthToken
+    // sin sesión dispara clientoauth con jwt_token=undefined (error CORS/500
+    // en consola) y quema el timeout; el backend contestará 401 y la app
+    // mostrará el login de inmediato.
+    const csrf = leerCookie('ZD_CSRF_TOKEN')
+    if (!csrf) return headers
     // Camino 1 (spec §1.2): token de una hora en el header Authorization.
     try {
       if (catalyst?.auth.generateAuthToken) {
@@ -78,14 +89,13 @@ export const authWeb: AuthService = {
         if (token) headers['Authorization'] = token
       }
     } catch {
-      // Sin token (sin sesión, timeout o CORS): mismo dominio → las cookies
-      // de sesión autentican igual; sin cookies el backend responde 401 y la
-      // app muestra el login en vez de colgarse.
+      // Sin token (timeout o sesión caducada): mismo dominio → las cookies
+      // de sesión autentican igual; si tampoco valen, el backend responde
+      // 401 y la app muestra el login en vez de colgarse.
     }
     // Camino 2: cookies del mismo dominio + header CSRF que exige Catalyst
     // en peticiones de escritura autenticadas por cookie.
-    const csrf = leerCookie('ZD_CSRF_TOKEN')
-    if (csrf) headers['ZCSRF-TOKEN'] = `csrfParam=${csrf}`
+    headers['ZCSRF-TOKEN'] = `csrfParam=${csrf}`
     return headers
   },
 }
