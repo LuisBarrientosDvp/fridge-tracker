@@ -1,0 +1,6 @@
+/* Tailwind v3 (modo PostCSS clásico) — el build de Catalyst
+   (zcatalyst-cli-plugin-react) activa Tailwind al detectar tailwind.config.js.
+   El demo original usaba Tailwind 4 con `@import 'tailwindcss'` vía Vite. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
