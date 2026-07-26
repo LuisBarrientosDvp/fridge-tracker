@@ -13,6 +13,8 @@
 // storage.native.ts usará @capacitor-community/sqlite, etc.)
 // Nada fuera de esta carpeta debe cambiar.
 
+import type { AuthService } from './auth'
+import { authWeb } from './auth.web'
 import type { CameraService } from './camera'
 import { cameraWeb } from './camera.web'
 import type { HapticsService } from './haptics'
@@ -29,7 +31,11 @@ export const storage: SyncQueue = storageWeb
 export const camera: CameraService = cameraWeb
 export const location: LocationService = locationWeb
 export const haptics: HapticsService = hapticsWeb
+export const auth: AuthService = authWeb
 
+export { api, ApiError } from './api'
+export type { AltaEquipo, CambioEstatus, FiltrosEquipos, NuevoLugar } from './api'
+export type { AuthService } from './auth'
 export type { LecturaCodigo, ScannerService, SesionEscaneo } from './scanner'
 export type { EventoEncolado, SyncQueue } from './storage'
 export type { CameraService } from './camera'

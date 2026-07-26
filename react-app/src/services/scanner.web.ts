@@ -1,3 +1,4 @@
+import { BarcodeDetector as BarcodeDetectorPolyfill } from 'barcode-detector/ponyfill'
 import type { LecturaCodigo, ScannerService, SesionEscaneo } from './scanner'
 
 const INTERVALO_DETECCION_MS = 200
@@ -5,9 +6,15 @@ const INTERVALO_DETECCION_MS = 200
 // siga frente a la cámara; sin esta ventana se encolarían duplicados.
 const VENTANA_DEDUP_MS = 2000
 
+// Nativo en Chrome Android; en Safari/iOS (WebKit no implementa
+// BarcodeDetector) entra el ponyfill de zxing-wasm, así que TODO teléfono
+// con cámara puede escanear. La captura manual sigue disponible (regla 5).
+const Detector: typeof BarcodeDetectorPolyfill =
+  'BarcodeDetector' in globalThis ? (globalThis as any).BarcodeDetector : BarcodeDetectorPolyfill
+
 export const scannerWeb: ScannerService = {
   async estaDisponible(): Promise<boolean> {
-    return 'BarcodeDetector' in globalThis
+    return typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
   },
 
   async iniciar(alDetectar: (lectura: LecturaCodigo) => void): Promise<SesionEscaneo> {
@@ -18,8 +25,8 @@ export const scannerWeb: ScannerService = {
 
     // Sin lista explícita de formatos: en bodega no sabemos todavía qué
     // traen las etiquetas de fábrica, así que se aceptan todos los soportados.
-    const formatos = await BarcodeDetector.getSupportedFormats()
-    const detector = new BarcodeDetector({ formats: formatos })
+    const formatos = await Detector.getSupportedFormats()
+    const detector = new Detector({ formats: [...formatos] })
 
     // Video interno (nunca se monta en el DOM) del que el detector toma
     // frames. La pantalla muestra el mismo stream en su propio <video>.

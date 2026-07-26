@@ -12,6 +12,11 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Fridge Tracker</title>
+    <!-- Web SDK de Catalyst: window.catalyst para login y token. init.js lo
+         sirve el hosting del proyecto; en npm start local no existe y la app
+         lo detecta (estado sin-sdk). -->
+    <script src="https://static.zohocdn.com/catalyst/sdk/js/4.4.0/catalystWebSDK.js"></script>
+    <script src="/__catalyst/sdk/init.js"></script>
   </head>
   <body>
     <noscript>Necesitas habilitar JavaScript para usar esta aplicación.</noscript>

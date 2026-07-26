@@ -91,9 +91,9 @@ explícitamente fuera de la cola offline por su peso; solo el cambio de estatus
 El mockup se construyó antes de la spec v3. Estas piezas del código heredado
 **cambian** — no las tomes como referencia de producto:
 
-1. **Estatus:** `src/types/estatus.ts` trae el catálogo viejo de 10 estatus en
-   un solo eje (`Recibido`, `En diagnóstico`, `Disponible / OK`…). La v3 usa
-   **dos ejes independientes** (ver Parte II §3). Refactor pendiente.
+1. **Estatus:** ✅ refactor hecho (2026-07-26). `src/types/estatus.ts` ya trae
+   los **dos ejes** de la v3 (Parte II §3) con etiquetas y colores; el
+   catálogo viejo de 10 estatus desapareció.
 2. **Auth:** el "JWT propio, no el SDK de Catalyst" del mockup era por el
    origen `capacitor://localhost` de la fase nativa. La PWA en hosting del
    mismo proyecto **sí usa el SDK de Catalyst** (`generateAuthToken`).
@@ -136,8 +136,12 @@ El mockup se construyó antes de la spec v3. Estas piezas del código heredado
 
 **Frontend / dispositivo:**
 - `BarcodeDetector` no existe en Safari/iOS (todos los navegadores de iOS son
-  WebKit). `scanner.web.ts` detecta y degrada a captura manual — verificado en
-  iPhone 17 el 2026-07-25. Fallback posible: `@zxing/browser` o ZBar-WASM.
+  WebKit). ✅ Resuelto (2026-07-26): `scanner.web.ts` usa el ponyfill
+  [`barcode-detector`](https://www.npmjs.com/package/barcode-detector)
+  (zxing-wasm) cuando la API nativa falta, así que **iPhone/iPad y escritorio
+  también escanean**. La captura manual sigue siempre disponible (regla 5).
+  Nota: el ponyfill descarga su .wasm de jsDelivr la primera vez — requiere
+  red en el primer escaneo iOS.
 - WebKit niega la geolocalización con certificado autofirmado: en dev los
   eventos de iPhone van sin GPS. Con certificado válido (producción) no aplica.
 - HTTPS obligatorio en dev: `getUserMedia` exige contexto seguro
@@ -692,59 +696,82 @@ catalyst deploy
 El plugin de React construye y sube el cliente. URL de desarrollo:
 `https://demo-890811559.development.catalystserverless.com`
 
-## Estructura del cliente
+## Estructura del cliente (app completa, 2026-07-26)
 
 ```
 react-app/src/
-├── types/               Tipos del dominio
-│   ├── estatus.ts       ⚠️ Catálogo de 10 estatus del mockup — PENDIENTE de
-│   │                    refactorizar al modelo de dos ejes (Parte II §3)
-│   ├── evento.ts        Evento (la unidad que se encola), TipoEvento, CoordenadasGps
-│   ├── refrigerador.ts  Ficha del equipo (llave: numeroSerie)
-│   └── barcode-detector.d.ts  Tipos de la API BarcodeDetector (no vienen en TS)
-├── services/            ÚNICA puerta a capacidades del dispositivo (regla 1)
+├── types/
+│   ├── estatus.ts       Dos ejes de estatus (uniones de literales) + etiquetas + colores
+│   ├── api.ts           Formas de los datos del backend (Equipo, Lugar, Movimiento…)
+│   ├── evento.ts        Evento de la cola local (legado del mockup, solo /debug)
+│   ├── catalyst.d.ts    Tipos mínimos de window.catalyst (Web SDK)
+│   └── barcode-detector.d.ts  Tipos de la API BarcodeDetector
+├── services/            ÚNICA puerta a dispositivo Y red (regla 1)
 │   ├── index.ts         Punto de importación para toda la app
-│   ├── scanner.ts       Interfaz  │ scanner.web.ts   BarcodeDetector
-│   ├── storage.ts       Interfaz  │ storage.web.ts   Cola de eventos en Dexie
-│   ├── db.ts            Esquema Dexie (solo lo usa storage.web.ts)
-│   ├── camera.ts        Interfaz  │ camera.web.ts    Stub (fotos: fase siguiente)
-│   ├── location.ts      Interfaz  │ location.web.ts  navigator.geolocation
-│   └── haptics.ts       Interfaz  │ haptics.web.ts   navigator.vibrate
-├── hooks/
-│   └── usePendientes.ts Cuenta reactiva de eventos sin sincronizar
+│   ├── api.ts           TODA llamada al backend pasa por aquí (token por llamada)
+│   ├── auth.ts/.web.ts  Sesión Catalyst: login, logout, encabezados de auth
+│   ├── scanner.ts/.web.ts  BarcodeDetector nativo o ponyfill zxing-wasm (iOS)
+│   ├── location.ts/.web.ts GPS best-effort · haptics.ts/.web.ts vibración
+│   ├── storage.ts/.web.ts + db.ts  Cola Dexie (legado, solo /debug)
+│   └── camera.ts/.web.ts   Stub (fotos: fase futura)
+├── context/
+│   └── SesionContext.tsx  Estado global de sesión: cargando → login → usuario+rol
 ├── components/
-│   ├── ContadorPendientes.tsx  Badge siempre visible (regla 6); link a /debug
-│   └── CapturaManual.tsx       Teclear serie a mano (regla 5)
+│   ├── ui.tsx             Insignias de estatus, cabecera, tarjeta de equipo…
+│   ├── ListaEquipos.tsx   Lista con filtros/búsqueda/totales/paginación
+│   ├── BuscadorLugar.tsx  Búsqueda normalizada + crear con GPS silencioso
+│   └── CapturaManual.tsx  Teclear código a mano (regla 5)
 └── pages/
-    ├── EscaneoPage.tsx         Ruta /       — cámara + detección + encolado
-    └── DebugColaPage.tsx       Ruta /debug  — inspección cruda de la cola
+    ├── LoginPage.tsx      PRIMERA pantalla: widget de Catalyst Auth
+    ├── MenuPage.tsx       Menú por rol (§9 + roles de producto)
+    ├── EscaneoPage.tsx    Cámara → GET /codigos/:codigo → ficha o alta
+    ├── FichaEquipoPage.tsx  Ficha + cambios de estatus + QR + historial
+    ├── AltaEquipoPage.tsx   Alta en campo con catálogos
+    ├── ReportesPage.tsx     Global, solo ADMIN
+    ├── AlmacenPage.tsx      Mi almacén (ENCARGADO/ADMIN)
+    └── DebugColaPage.tsx    Inspección de la cola local (legado)
 ```
 
 Regla de dependencias: `pages` y `components` importan **solo** de
-`src/services` (el index), nunca una implementación `.web.ts` ni una API del
-navegador directa. Si necesitas una capacidad nueva del dispositivo, crea un
-servicio nuevo (interfaz + `.web.ts` + export en `index.ts`).
+`src/services` (el index), nunca una implementación `.web.ts`, un fetch ni
+una API del navegador directa.
 
-## Dónde continuar (TODOs en el código)
+### Mapa de roles del producto
 
-- `src/services/index.ts` — **TODO(nativo):** selección web/native cuando
-  entre Capacitor.
-- `src/services/storage.ts` — **TODO(backend):** contrato del sync
-  (`POST /equipos/:id/movimientos`, idempotente por uuid).
-- `src/services/camera.web.ts` — **TODO(fotos):** captura + compresión canvas.
-- `src/types/evento.ts` y `EscaneoPage.tsx` — **TODO(auth):** `usuarioId`
-  viene fijo en 0 hasta que exista sesión con Catalyst Auth.
+| Producto dice | En el sistema | Menú |
+|---|---|---|
+| Superadmin | `ADMIN` | Escanear · Mi almacén · **Reportes** · cambiar almacén de equipos |
+| Encargado de almacén | `ENCARGADO` | Escanear · Mi almacén (solo el suyo) |
+| Usuario | `TECNICO` | Solo escanear |
 
-## Decisiones heredadas del mockup que siguen vigentes
+Las rutas se protegen en `App.tsx` y el backend vuelve a validar cada
+permiso. Superadmins actuales (rol ADMIN, sin almacén base):
+`fjavieraf@gmail.com`, `lbarrientosnajera@gmail.com`, `l.r.v.m2409@gmail.com`.
 
-- **`ScannerService` es una sesión** (`iniciar(callback)` → `{stream, detener}`):
-  la pantalla es de escaneo continuo y necesita el stream para el preview. En
-  nativo (ML Kit) `stream` vendrá `undefined` porque el plugin dibuja su UI.
-- **La lectura devuelve `{valorCrudo, formato}`** y el evento guarda
-  `formatoCodigo`: herramienta para validar en bodega qué traen las etiquetas.
-- **Quinto servicio `haptics`**: la regla 1 prohíbe `navigator.vibrate` directo.
-- **`sincronizado` se guarda como `0 | 1`**, no boolean.
-- **El escaneo intenta GPS 5 s (best-effort)** y encola sin GPS si no hay fix.
+### Flujo de sesión
+
+1. `index.html` carga el Web SDK (`catalystWebSDK.js` + `/__catalyst/sdk/init.js`
+   — este último solo existe hospedado en el dominio del proyecto).
+2. `SesionContext` revisa `isUserAuthenticated()` → sin sesión muestra
+   `LoginPage` (widget `catalyst.auth.signIn`).
+3. Con sesión llama `GET /yo`: si el correo no tiene renglón en `Usuario`
+   responde 403 → pantalla "cuenta sin acceso".
+4. `services/api.ts` agrega auth a cada llamada: token de
+   `generateAuthToken()` si el SDK lo ofrece + cookies same-origin con header
+   CSRF (`ZCSRF-TOKEN: csrfParam=<cookie ZD_CSRF_TOKEN>`).
+
+## Decisiones vigentes
+
+- **`ScannerService` es una sesión** (`iniciar(callback)` → `{stream, detener}`).
+- **HashRouter** (rutas `#/…`): el hosting sirve bajo `/app/index.html` sin
+  rewrites.
+- **QR**: librería `qrcode`, contenido = serial, 512 px, corrección M (§8).
+- **Escaneo universal**: nativo si existe `BarcodeDetector`, ponyfill
+  `barcode-detector` (zxing-wasm) si no — iOS/escritorio escanean.
+- **GPS best-effort 5 s** en movimientos, altas y creación de lugares.
+- **La cola Dexie del mockup queda como legado** (visible en `/debug`); los
+  movimientos van directo a la API. Cuando entre el modo offline (futuro), la
+  cola se reconecta usando el mismo `uuid_cliente`.
 
 ---
 
@@ -793,14 +820,18 @@ Marca cada casilla al completarla.
 
 ## 3. Authentication
 
-- [ ] "Start Exploring" en Authentication (consola).
-- [ ] Dar de alta el dominio del cliente en **CORS / Authorized Domains**
-      (el dominio `.development.catalystserverless.com`; si se migra a Slate,
-      también `*.onslate.com`).
-- [ ] Crear usuarios: un TECNICO (Torreón) y un ADMIN.
-- [ ] Insertar sus renglones en la tabla `Usuario` (rol + almacén base),
-      ligados por `catalyst_user_id`. Sin este renglón el backend responde
-      403 aunque el login funcione (el endpoint `GET /yo` sirve para probar).
+- [ ] "Start Exploring" en Authentication (consola) — confirmar.
+- [ ] Confirmar el dominio del cliente en **CORS / Authorized Domains**
+      (el dominio `.development.catalystserverless.com`).
+- [x] Superadmins creados (2026-07-26) con invitación por correo y renglón
+      ADMIN en `Usuario`:
+      `fjavieraf@gmail.com` (user_id 33866000000044874),
+      `lbarrientosnajera@gmail.com` (33866000000047087),
+      `l.r.v.m2409@gmail.com` (33866000000048175).
+      **Cada uno debe aceptar la invitación del correo** para fijar su
+      contraseña antes de poder entrar.
+- [ ] Crear ENCARGADO(s) y TECNICO(s) cuando se definan (mismo procedimiento:
+      alta en Authentication + renglón en `Usuario` con rol y almacén base).
 - [ ] **No** habilitar API Gateway (Parte I, Autenticación).
 
 ## 4. Backend — Advanced I/O Function (Parte II §6) — ✅ DEPLOYADA 2026-07-26
@@ -816,34 +847,29 @@ URL: `https://demo-890811559.development.catalystserverless.com/server/api/`
 - [ ] Probar todos los endpoints con curl/Postman **con token real** (falta
       crear los usuarios de Auth, sección 3).
 
-## 5. Frontend — de mockup a app (react-app/)
+## 5. Frontend — ✅ APP COMPLETA CONSTRUIDA Y DEPLOYADA 2026-07-26
 
-- [ ] Refactor `src/types/estatus.ts`: del catálogo de 10 estatus del mockup a
-      los **dos ejes** de §3 (unión de literales, no string).
-- [ ] Capa `src/services/api.ts`: obtiene token con
-      `catalyst.auth.generateAuthToken()` **justo antes de cada llamada**
-      (dura 1 h, no se guarda) y centraliza todas las llamadas al backend.
-      Incluir el SDK web de Catalyst en `public/index.html`.
-- [ ] Login (técnico/admin) con Catalyst Auth; quitar el `usuarioId: 0` fijo
-      de `evento.ts` / `EscaneoPage.tsx`.
-- [ ] Conectar el escaneo a `GET /codigos/:codigo`: 200 → ficha; 404 → alta
-      con el código precargado (flujo de §7).
-- [ ] Ficha del equipo: datos + historial + acciones de cambio de
-      ubicación/condición (`POST /equipos/:id/movimientos`).
-- [ ] Flujo cambio de ubicación: EN_ALMACEN directo; EN_UBICACION busca/crea
-      Lugar PUNTO_VENTA; EN_REPARACION interna (mismo/otro almacén) o externa
-      + Lugar TALLER.
-- [ ] Buscador/creador de lugares con deduplicación (la lista se muestra
-      **antes** de habilitar "Crear nueva ubicación"); GPS capturado en
-      silencio al crear.
-- [ ] Alta en campo: serial (o "sin serial"), marca y tipo obligatorios;
-      autocompletado contra `GET /catalogos`.
-- [ ] Generación de QR: librería `qrcode` (npm), contenido = `serial` (no el
-      ROWID), canvas 512×512, corrección M, botón "Descargar PNG" (§8).
-- [ ] Tabla de administración (escritorio): ENCARGADO ve su almacén, ADMIN ve
-      todo; cambio de almacén solo ADMIN (§9).
-- [ ] Contador de pendientes: mantener; advertencia al cerrar sesión con cola
-      sin sincronizar.
+- [x] Login como primera pantalla (widget de Catalyst Auth) + compuerta de
+      sesión + pantalla "cuenta sin acceso" para 403.
+- [x] Menú por rol: ADMIN reportes+almacén+escanear · ENCARGADO
+      escanear+almacén · TECNICO solo escanear. Rutas protegidas en App.tsx.
+- [x] Refactor de estatus a los dos ejes de §3.
+- [x] Capa `services/api.ts` centralizada (token por llamada + CSRF cookie).
+- [x] Escaneo conectado: `GET /codigos/:codigo` → 200 ficha / 404 alta con
+      código precargado. Escaneo también en iOS/escritorio vía ponyfill
+      zxing-wasm.
+- [x] Ficha: dos insignias de estatus, historial, cambio de ubicación con los
+      3 flujos (almacén directo / punto de venta / reparación interna-mismo,
+      interna-otro almacén, externa-taller), cambio de condición, cambio de
+      almacén (solo ADMIN, visible y validado en backend).
+- [x] Buscador/creador de lugares con deduplicación y GPS silencioso.
+- [x] Alta en campo: serial o "sin serial", marca/tipo obligatorios de
+      catálogo, cerveza/año/activo opcionales.
+- [x] QR: `qrcode`, contenido = serial, 512 px, corrección M, descarga PNG.
+- [x] Reportes (ADMIN): totales + filtros + búsqueda + paginación.
+      Mi almacén (ENCARGADO/ADMIN): misma lista fijada a su almacén.
+- Pendiente menor: advertencia al cerrar sesión con cola local sin
+  sincronizar (la cola quedó como legado de solo lectura en /debug).
 
 ## 6. Pruebas y deploy
 
