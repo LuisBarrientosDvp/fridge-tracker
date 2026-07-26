@@ -1,39 +1,23 @@
-import { useEffect, useRef } from 'react'
-import { auth } from '../services'
 import { useSesion } from '../context/SesionContext'
 
 // Primera pantalla de la app: inicio de sesión con Catalyst Authentication.
-// El widget oficial se monta en un contenedor propio; cuando la sesión queda
-// activa, el proveedor de sesión detecta el cambio y muestra el menú.
+// Se usa la página de login HOSPEDADA por Catalyst vía botón explícito —
+// nunca redirigir automáticamente: montar el widget/redirect en automático
+// provocaba un bucle infinito entre /app y /__catalyst/auth/login cuando la
+// verificación de sesión del SDK discrepaba del servidor.
 export default function LoginPage() {
-  const { estado, recargar } = useSesion()
-  const montado = useRef(false)
+  const { estado } = useSesion()
 
-  useEffect(() => {
-    if (estado === 'sin-sesion' && !montado.current && auth.sdkDisponible()) {
-      montado.current = true
-      auth.montarLogin('login-catalyst')
-    }
-  }, [estado])
-
-  // El widget vive en un iframe: sondear la sesión para enterarnos del login
-  // sin depender de la redirección configurada en la consola.
-  useEffect(() => {
-    if (estado !== 'sin-sesion') return
-    const t = window.setInterval(async () => {
-      if (await auth.estaAutenticado()) {
-        window.clearInterval(t)
-        recargar()
-      }
-    }, 1500)
-    return () => window.clearInterval(t)
-  }, [estado, recargar])
+  // Regreso a la app con URL absoluta (la relativa confunde al login hospedado).
+  const urlLogin = `/__catalyst/auth/login?redirect_url=${encodeURIComponent(
+    window.location.origin + '/app/index.html',
+  )}`
 
   return (
     <main className="flex min-h-dvh flex-col bg-slate-950">
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-10">
         {/* Identidad */}
-        <div className="mb-8 text-center">
+        <div className="mb-10 text-center">
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-sky-500 to-emerald-500 text-4xl shadow-lg shadow-emerald-500/20">
             ❄️
           </div>
@@ -43,21 +27,16 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Widget embebido de Catalyst (si el proyecto está en modo Embedded) */}
-        <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl empty:hidden">
-          <div id="login-catalyst" className="empty:hidden" />
-        </div>
-
-        {/* Camino garantizado: página de login hospedada por Catalyst.
-            Funciona en modo Hosted y Embedded; regresa a la app al entrar. */}
-        {estado === 'sin-sesion' && (
-          <a
-            href={`/__catalyst/auth/login?redirect_url=${encodeURIComponent('/app/index.html')}`}
-            className="mt-6 flex h-16 w-full max-w-md items-center justify-center rounded-2xl bg-emerald-500 text-lg font-bold text-emerald-950 shadow-lg shadow-emerald-500/20 active:bg-emerald-400"
-          >
-            Iniciar sesión
-          </a>
-        )}
+        <a
+          href={urlLogin}
+          className="flex h-16 w-full max-w-md items-center justify-center rounded-2xl bg-emerald-500 text-lg font-bold text-emerald-950 shadow-lg shadow-emerald-500/20 active:bg-emerald-400"
+        >
+          Iniciar sesión
+        </a>
+        <p className="mt-3 max-w-md text-center text-xs text-slate-500">
+          Entra con el correo y la contraseña de tu invitación. Si aún no
+          aceptas la invitación, revisa tu correo (remitente: Zoho Catalyst).
+        </p>
 
         {estado === 'sin-sdk' && (
           <div className="mt-6 max-w-md rounded-xl bg-amber-500/10 p-4 text-center text-sm text-amber-300 ring-1 ring-amber-500/30">

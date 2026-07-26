@@ -43,9 +43,13 @@ export const authWeb: AuthService = {
 
   cerrarSesion(): void {
     const catalyst = sdk()
-    if (!catalyst) return
-    // Vuelve a la raíz de la app hospedada (el login se muestra de nuevo).
-    catalyst.auth.signOut('/app/index.html')
+    // URL absoluta: signOut con ruta relativa falla en algunos entornos.
+    const destino = window.location.origin + '/app/index.html'
+    if (catalyst) {
+      catalyst.auth.signOut(destino)
+    } else {
+      window.location.href = destino
+    }
   },
 
   async encabezados(): Promise<Record<string, string>> {

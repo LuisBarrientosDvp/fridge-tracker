@@ -30,29 +30,25 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
 
   const cargar = useCallback(async () => {
     setEstado('cargando')
-    if (!auth.sdkDisponible()) {
-      setEstado('sin-sdk')
-      return
-    }
-    const autenticado = await auth.estaAutenticado()
-    if (!autenticado) {
-      setEstado('sin-sesion')
-      return
-    }
+    // La fuente de verdad de la sesión es el backend (GET /yo valida las
+    // cookies/token en el servidor). isUserAuthenticated() del SDK puede
+    // discrepar y causaba un bucle de redirecciones con el login hospedado.
     try {
       const { usuario: u } = await api.yo()
       setUsuario(u)
       setEstado('lista')
+      return
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
         setEstado('sin-registro')
-      } else if (err instanceof ApiError && err.status === 401) {
-        setEstado('sin-sesion')
-      } else {
-        // Backend caído u otro error: tratar como sin registro para mostrar
-        // un mensaje útil en vez de una pantalla en blanco.
-        setEstado('sin-registro')
+        return
       }
+      if (err instanceof ApiError && err.status === 401) {
+        setEstado(auth.sdkDisponible() ? 'sin-sesion' : 'sin-sdk')
+        return
+      }
+      // Red caída o dev local sin backend: mostrar login con aviso.
+      setEstado(auth.sdkDisponible() ? 'sin-sesion' : 'sin-sdk')
     }
   }, [])
 
