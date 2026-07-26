@@ -37,8 +37,9 @@ de venta de la Comarca Lagunera. PWA fullstack sobre **Zoho Catalyst**.
 
 Tema claro con marino `#1F3A5F` + cian `#12B5C9`, tarjetas blancas, pastillas
 de estatus con punto de color y Roboto; la pantalla de escaneo es oscura con
-brackets cian de encuadre. Tokens en `react-app/tailwind.config.js` (ver
-sección "Design system" de `CLAUDE.md`).
+brackets cian de encuadre. Las barras superiores muestran el tipo de
+dispositivo (PC / Android / iOS / Móvil). Tokens en
+`react-app/tailwind.config.js` (ver sección "Design system" de `CLAUDE.md`).
 
 ## Stack
 
@@ -75,7 +76,7 @@ catalyst deploy          # desde la raíz del repo (cliente + funciones)
     └── src/
         ├── pages/       Login, Menú, Escaneo, Ficha, Alta, Reportes, Almacén, Usuarios
         ├── components/  UI compartida, buscador de lugares, captura manual
-        ├── services/    ÚNICA puerta a dispositivo y red (scanner, api, auth…)
+        ├── services/    ÚNICA puerta a dispositivo y red (scanner, api, auth, device…)
         ├── context/     Sesión (estado de login + usuario + rol)
         └── types/       Dominio: dos ejes de estatus, formas de la API
 ```

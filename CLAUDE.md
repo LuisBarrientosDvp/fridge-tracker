@@ -340,7 +340,8 @@ react-app/src/
 ├── services/     ÚNICA puerta a dispositivo y red (regla 1); index.ts es el
 │                 punto de importación. api.ts (toda llamada al backend, token
 │                 por llamada) · auth.ts/.web.ts · scanner (nativo/ponyfill) ·
-│                 location (GPS best-effort 5 s) · haptics · storage+db.ts
+│                 location (GPS best-effort 5 s) · haptics · device (tipo
+│                 PC/Android/iOS/Móvil para la cabecera) · storage+db.ts
 │                 (cola Dexie legado, solo /debug) · camera (stub futuro)
 ├── context/      SesionContext.tsx — cargando → sin-sesion | sin-registro |
 │                 sin-sdk | error-auth | lista
@@ -379,7 +380,9 @@ sin token → 401, SDK 4.6.1 servido · superadmin `fjavieraf2@gmail.com`
 (Authentication + renglón ADMIN, 2026-07-26) · gestión de usuarios en la app
 (menú Usuarios, endpoints `/usuarios`, 2026-07-26) · design system claro
 marino/cian implementado en toda la app + timeouts del SDK y salida de
-emergencia en "Verificando sesión" (2026-07-26).
+emergencia en "Verificando sesión" (2026-07-26) · fix ROWIDs como string
+(`idValido()`) · SDK solo con cookie de sesión (sin ruido CORS) · etiqueta
+de dispositivo (PC/Android/iOS/Móvil) en las barras superiores.
 
 **Pendiente:**
 
