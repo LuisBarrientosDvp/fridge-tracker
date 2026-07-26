@@ -757,10 +757,11 @@ Marca cada casilla al completarla.
 
 - [x] Repo remoto conectado y pusheado:
       `https://github.com/LuisBarrientosDvp/fridge-tracker.git` (master).
-- [ ] `catalyst deploy` completo (cliente + funciones) y verificar que el
-      cliente carga en
-      `https://demo-890811559.development.catalystserverless.com`.
-      (La función ya está deployada; falta el cliente.)
+- [x] `catalyst deploy` completo (cliente + funciones) — 2026-07-26.
+      App: `https://demo-890811559.development.catalystserverless.com/app/index.html`
+      API: `https://demo-890811559.development.catalystserverless.com/server/api/`
+      Nota: el cliente usa **HashRouter** (rutas `#/` y `#/debug`) porque el
+      hosting sirve bajo `/app/index.html` sin rewrites de servidor.
 
 ## 1. Data Store — las 9 tablas (Parte II §5) — ✅ HECHO 2026-07-26 vía MCP
 
