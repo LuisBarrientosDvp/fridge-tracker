@@ -8,10 +8,10 @@ import { useSesion } from '../context/SesionContext'
 export default function LoginPage() {
   const { estado } = useSesion()
 
-  // Regreso a la app con URL absoluta (la relativa confunde al login hospedado).
-  const urlLogin = `/__catalyst/auth/login?redirect_url=${encodeURIComponent(
-    window.location.origin + '/app/index.html',
-  )}`
+  // Sin parámetros: el endpoint hospedado rechaza redirect_url con
+  // PATTERN_NOT_MATCHED. A dónde regresa tras el login se configura en la
+  // consola (Authentication → Hosted → redirect), no aquí.
+  const urlLogin = '/__catalyst/auth/login'
 
   return (
     <main className="flex min-h-dvh flex-col bg-slate-950">
