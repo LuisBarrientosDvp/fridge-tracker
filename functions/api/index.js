@@ -36,6 +36,15 @@ function esc(value) {
 	return String(value).replace(/'/g, "''");
 }
 
+// Los ROWID de Catalyst (~17 dígitos) exceden Number.MAX_SAFE_INTEGER:
+// Number() los redondea al double más cercano y la consulta busca OTRO
+// renglón ("Equipo no encontrado" con un id válido). Los ids viajan siempre
+// como string de dígitos validada y se interpolan tal cual en ZCQL.
+function idValido(valor) {
+	const s = String(valor === undefined || valor === null ? '' : valor).trim();
+	return /^\d{1,20}$/.test(s) ? s : null;
+}
+
 function normalizar(nombre) {
 	return nombre
 		.trim()
@@ -193,7 +202,7 @@ app.get('/codigos/:codigo', async (req, res) => {
 		}
 		const refris = unwrap(
 			await req.zcql.executeZCQLQuery(
-				`SELECT * FROM Refrigerador WHERE ROWID = ${Number(codigos[0].refrigerador_id)}`
+				`SELECT * FROM Refrigerador WHERE ROWID = ${idValido(codigos[0].refrigerador_id)}`
 			),
 			'Refrigerador'
 		);
@@ -283,7 +292,7 @@ app.post('/equipos', async (req, res) => {
 app.get('/equipos', async (req, res) => {
 	try {
 		const where = [];
-		if (req.query.almacen_id) where.push(`almacen_id = ${Number(req.query.almacen_id)}`);
+		if (idValido(req.query.almacen_id)) where.push(`almacen_id = ${idValido(req.query.almacen_id)}`);
 		if (req.query.estatus_ubicacion) where.push(`estatus_ubicacion = '${esc(req.query.estatus_ubicacion)}'`);
 		if (req.query.estatus_condicion) where.push(`estatus_condicion = '${esc(req.query.estatus_condicion)}'`);
 		if (req.query.q) {
@@ -292,7 +301,7 @@ app.get('/equipos', async (req, res) => {
 		}
 		// ENCARGADO ve solo su almacén en la tabla de administración (§9)
 		if (req.usuario.rol === 'ENCARGADO' && req.usuario.almacen_id) {
-			where.push(`almacen_id = ${Number(req.usuario.almacen_id)}`);
+			where.push(`almacen_id = ${idValido(req.usuario.almacen_id)}`);
 		}
 		const perPage = Math.min(Number(req.query.per_page) || 50, 300);
 		const page = Math.max(Number(req.query.page) || 1, 1);
@@ -311,8 +320,8 @@ app.get('/equipos', async (req, res) => {
 // GET /equipos/:id — ficha + historial
 app.get('/equipos/:id', async (req, res) => {
 	try {
-		const id = Number(req.params.id);
-		if (!Number.isFinite(id)) return res.status(400).json({ error: 'id inválido' });
+		const id = idValido(req.params.id);
+		if (!id) return res.status(400).json({ error: 'id inválido' });
 		const refris = unwrap(
 			await req.zcql.executeZCQLQuery(`SELECT * FROM Refrigerador WHERE ROWID = ${id}`),
 			'Refrigerador'
@@ -344,8 +353,8 @@ app.post('/equipos/:id/movimientos', async (req, res) => {
 		const existente = await movimientoPorUuid(req.zcql, b.uuid_cliente);
 		if (existente) return res.status(200).json({ movimiento: existente, idempotente: true });
 
-		const id = Number(req.params.id);
-		if (!Number.isFinite(id)) return res.status(400).json({ error: 'id inválido' });
+		const id = idValido(req.params.id);
+		if (!id) return res.status(400).json({ error: 'id inválido' });
 		const refris = unwrap(
 			await req.zcql.executeZCQLQuery(`SELECT * FROM Refrigerador WHERE ROWID = ${id}`),
 			'Refrigerador'
@@ -391,8 +400,8 @@ app.patch('/equipos/:id/almacen', async (req, res) => {
 		const b = req.body || {};
 		if (!b.almacen_id) return res.status(400).json({ error: 'almacen_id es obligatorio' });
 
-		const id = Number(req.params.id);
-		if (!Number.isFinite(id)) return res.status(400).json({ error: 'id inválido' });
+		const id = idValido(req.params.id);
+		if (!id) return res.status(400).json({ error: 'id inválido' });
 		const refris = unwrap(
 			await req.zcql.executeZCQLQuery(`SELECT * FROM Refrigerador WHERE ROWID = ${id}`),
 			'Refrigerador'
@@ -607,8 +616,8 @@ app.patch('/usuarios/:id', async (req, res) => {
 		if (req.usuario.rol !== 'ADMIN') {
 			return res.status(403).json({ error: 'Solo un ADMIN puede administrar usuarios' });
 		}
-		const id = Number(req.params.id);
-		if (!Number.isFinite(id)) return res.status(400).json({ error: 'id inválido' });
+		const id = idValido(req.params.id);
+		if (!id) return res.status(400).json({ error: 'id inválido' });
 		const filas = unwrap(
 			await req.zcql.executeZCQLQuery(`SELECT * FROM Usuario WHERE ROWID = ${id}`),
 			'Usuario'

@@ -105,6 +105,12 @@ Reglas vigentes:
   en la función.
 - Data Store: datetimes en la zona del proyecto (America/Mexico_City) — la
   función formatea con `Intl` locale `sv-SE`.
+- **Los ROWID (~17 dígitos) exceden `Number.MAX_SAFE_INTEGER`**: `Number(id)`
+  los redondea a otro id y la consulta devuelve vacío ("Equipo no
+  encontrado" con un id válido, corregido 2026-07-26). Los ids se manejan
+  SIEMPRE como string; en la función se validan con `idValido()` (regex de
+  dígitos) y se interpolan tal cual en ZCQL. Nunca `Number()`/`parseInt()`
+  sobre un ROWID.
 - Antes de Production: clic en "Start Exploring" por servicio y billing
   activo. Catalyst se factura aparte de Zoho One/CRM.
 - Build: plugin React (webpack/CRA), no Vite. **Tailwind v3** PostCSS (no
