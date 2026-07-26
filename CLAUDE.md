@@ -755,51 +755,40 @@ Marca cada casilla al completarla.
 
 ## 0. Git y deploy inicial
 
-- [ ] Crear el repositorio remoto en GitHub (o pedir acceso al del colega) y
-      conectarlo: `git remote add origin <url>` → `git push -u origin master`.
-      El repo local ya está en la raíz del proyecto con la fusión commiteada.
-- [ ] `catalyst deploy` de prueba para verificar que el cliente sube y carga en
+- [x] Repo remoto conectado y pusheado:
+      `https://github.com/LuisBarrientosDvp/fridge-tracker.git` (master).
+- [ ] `catalyst deploy` completo (cliente + funciones) y verificar que el
+      cliente carga en
       `https://demo-890811559.development.catalystserverless.com`.
+      (La función ya está deployada; falta el cliente.)
 
-## 1. Data Store — las 9 tablas (Parte II §5)
+## 1. Data Store — las 9 tablas (Parte II §5) — ✅ HECHO 2026-07-26 vía MCP
 
-Crear por CLI/SDK/MCP desde el esquema, **no a mano en la consola**. En la
-consola solo se hace clic en "Start Exploring" de Data Store la primera vez.
-
-- [ ] "Start Exploring" en Data Store (consola, una sola vez).
-- [ ] `Almacen` — 14 columnas; `cp` como **Text**, nunca Int.
-- [ ] `Lugar` — puntos de venta y talleres unificados; `nombre_normalizado`
-      (minúsculas sin acentos). El único compuesto (tipo + nombre_normalizado)
-      se valida en el backend.
-- [ ] `Usuario` — `catalyst_user_id` con índice único; rol
-      `TECNICO`/`ENCARGADO`/`ADMIN`.
-- [ ] `AlmacenEncargado` — N a N; sin interfaz en esta versión, la tabla se
-      crea ya.
-- [ ] `Refrigerador` — `serial` **sin** índice único (hay duplicados y "N/D"
-      en los datos reales); dos ejes de estatus.
-- [ ] `CodigoEquipo` — `codigo` con **índice único global**; aquí vive la
-      unicidad del sistema.
-- [ ] `Movimiento` — append-only; `uuid_cliente` con índice único
-      (idempotencia).
-- [ ] `SolicitudTraslado` — tabla lista, sin interfaz.
-- [ ] `Catalogo` — una tabla para marca/modelo/tipo/cerveza.
-- [ ] Revisar permisos App User de cada tabla (o decidir que solo la función
-      con scope admin toca el Data Store — recomendado).
+- [x] Las 9 tablas creadas con índices únicos (`CodigoEquipo.codigo`,
+      `Movimiento.uuid_cliente`, `Usuario.catalyst_user_id`) y defaults.
+      IDs: Almacen `33866000000043446`, Lugar `33866000000037369`,
+      Usuario `33866000000044450`, AlmacenEncargado `33866000000037728`,
+      Refrigerador `33866000000036391`, CodigoEquipo `33866000000040373`,
+      Movimiento `33866000000045416`, SolicitudTraslado `33866000000035510`,
+      Catalogo `33866000000045809`.
+- [x] Permisos: las tablas se tocan **solo** desde la función con scope
+      admin; no se habilitó escritura de App User.
+- Desviaciones del esquema (aceptadas): varchar tope 255 → `referencia`
+  quedó en 255 y `nota` es `text` (10,000); `lat`/`lng` double con 4
+  decimales (~11 m, suficiente para el demo).
 
 ## 2. Datos semilla e importación (Parte II §10)
 
-- [ ] Almacenes: Torreón, Gómez Palacio, Lerdo (lat/lng aproximados).
-- [ ] Catálogo: marcas (Criotec, Froster, Hussmann, Imbera, Metalfrio, NSF),
-      tipos (Refrigerador, Máq. hielo, Cám. fría), cervezas (Corona, Modelo,
-      Budlight, Michelob, Modelorama).
-- [ ] Lugares PUNTO_VENTA (6) y TALLER (2) de la spec.
+- [x] Almacenes: Torreón (TRC, ROWID `33866000000040732`), Gómez Palacio
+      (GP, `33866000000040733`), Lerdo (LER, `33866000000040734`).
+- [x] Catálogo: 6 marcas, 3 tipos, 5 cervezas (14 renglones).
+- [x] Lugares: 6 PUNTO_VENTA + 2 TALLER con `nombre_normalizado`.
 - [ ] Script de importación: ~40 renglones de `Inventario_Auditoria.xlsx`
       (hoja TRC) con el mapeo de columnas de §10. **Conseguir el archivo
       Excel** — no está en el repo.
 - [ ] Limpieza en la importación: deduplicar seriales, saltar "N/D" o
       longitud < 8, normalizar marcas contra el catálogo ("IMBERA" vs
       "Imbera"). Esta lógica se reutilizará con los ~9,000 equipos reales.
-- [ ] Verificar los datos en la consola.
 
 ## 3. Authentication
 
@@ -809,29 +798,22 @@ consola solo se hace clic en "Start Exploring" de Data Store la primera vez.
       también `*.onslate.com`).
 - [ ] Crear usuarios: un TECNICO (Torreón) y un ADMIN.
 - [ ] Insertar sus renglones en la tabla `Usuario` (rol + almacén base),
-      ligados por `catalyst_user_id`.
+      ligados por `catalyst_user_id`. Sin este renglón el backend responde
+      403 aunque el login funcione (el endpoint `GET /yo` sirve para probar).
 - [ ] **No** habilitar API Gateway (Parte I, Autenticación).
 
-## 4. Backend — Advanced I/O Function (Parte II §6)
+## 4. Backend — Advanced I/O Function (Parte II §6) — ✅ DEPLOYADA 2026-07-26
 
-- [ ] `catalyst functions:add` → tipo **Advanced I/O**, Node.js (stack
-      reciente), Express. La carpeta `functions/` está vacía hoy.
-- [ ] Middleware de auth: validar el token del header `Authorization`,
-      resolver el `Usuario` y su rol.
-- [ ] `GET /codigos/:codigo` — resuelve código escaneado (200 equipo / 404).
-- [ ] `POST /equipos` — alta en campo; crea el código principal; estatus
-      inicial EN_ALMACEN + OPERATIVO; `almacen_id` = el del usuario.
-- [ ] `GET /equipos` — filtros por almacén/estatus/búsqueda, **con paginación**
-      (ZCQL limita filas por respuesta).
-- [ ] `GET /equipos/:id` — ficha + historial de movimientos.
-- [ ] `POST /equipos/:id/movimientos` — valida los dos ejes (§3), idempotente
-      por `uuid_cliente` (si existe → 200 con el existente), escribe
-      `Movimiento` y actualiza el denormalizado en `Refrigerador`.
-- [ ] `PATCH /equipos/:id/almacen` — **solo ADMIN**, validado en backend.
-- [ ] `GET /lugares?tipo=&q=` — búsqueda contra `nombre_normalizado`.
-- [ ] `POST /lugares` — si la normalización colisiona, devuelve el existente.
-- [ ] `GET /almacenes` y `GET /catalogos?tipo=`.
-- [ ] Probar todos los endpoints con curl/Postman antes de tocar el cliente.
+URL: `https://demo-890811559.development.catalystserverless.com/server/api/`
+
+- [x] Función `api` (Advanced I/O, node18, Express) en `functions/api/`.
+- [x] Middleware de auth: `getCurrentUser()` del token → busca el renglón en
+      `Usuario` → 401 sin token / 403 sin renglón. Data Store con scope admin.
+- [x] Los 10 endpoints de la spec + `GET /yo` (usuario autenticado). CORS
+      permisivo para el dev server local.
+- [x] Smoke test: `GET /almacenes` sin token → 401 `{"error":"No autenticado"}`.
+- [ ] Probar todos los endpoints con curl/Postman **con token real** (falta
+      crear los usuarios de Auth, sección 3).
 
 ## 5. Frontend — de mockup a app (react-app/)
 

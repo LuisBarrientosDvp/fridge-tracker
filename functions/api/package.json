@@ -1,0 +1,10 @@
+{
+	"name": "api",
+	"version": "1.0.0",
+	"main": "index.js",
+	"author": "francisco@zenatta.com",
+	"dependencies": {
+		"express": "^4.21.2",
+		"zcatalyst-sdk-node": "latest"
+	}
+}
