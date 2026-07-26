@@ -43,10 +43,21 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Widget de login de Catalyst */}
-        <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
-          <div id="login-catalyst" className="min-h-[320px]" />
+        {/* Widget embebido de Catalyst (si el proyecto está en modo Embedded) */}
+        <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl empty:hidden">
+          <div id="login-catalyst" className="empty:hidden" />
         </div>
+
+        {/* Camino garantizado: página de login hospedada por Catalyst.
+            Funciona en modo Hosted y Embedded; regresa a la app al entrar. */}
+        {estado === 'sin-sesion' && (
+          <a
+            href={`/__catalyst/auth/login?redirect_url=${encodeURIComponent('/app/index.html')}`}
+            className="mt-6 flex h-16 w-full max-w-md items-center justify-center rounded-2xl bg-emerald-500 text-lg font-bold text-emerald-950 shadow-lg shadow-emerald-500/20 active:bg-emerald-400"
+          >
+            Iniciar sesión
+          </a>
+        )}
 
         {estado === 'sin-sdk' && (
           <div className="mt-6 max-w-md rounded-xl bg-amber-500/10 p-4 text-center text-sm text-amber-300 ring-1 ring-amber-500/30">

@@ -33,7 +33,12 @@ export const authWeb: AuthService = {
   montarLogin(elementId: string): void {
     const catalyst = sdk()
     if (!catalyst) return
-    catalyst.auth.signIn(elementId)
+    // login_redirect con la ruta legacy /app/index.html (hosting web clásico;
+    // si se migra a Slate cambia a '/'). Sin esto el widget puede redirigir
+    // a una ruta que no existe (PATTERN_NOT_MATCHED).
+    catalyst.auth.signIn(elementId, {
+      login_redirect: window.location.origin + '/app/index.html',
+    })
   },
 
   cerrarSesion(): void {
