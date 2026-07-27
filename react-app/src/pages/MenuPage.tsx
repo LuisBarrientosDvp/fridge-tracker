@@ -98,9 +98,9 @@ export default function MenuPage() {
           <button
             type="button"
             onClick={cerrarSesion}
-            className="shrink-0 rounded-lg bg-marino-700/60 px-3 py-2 text-sm font-medium text-white active:bg-marino-700"
+            className="shrink-0 whitespace-nowrap rounded-lg bg-marino-700/60 px-3 py-2 text-sm font-medium text-white active:bg-marino-700"
           >
-            Salir
+            Cerrar sesión
           </button>
         </div>
       </header>

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError } from '../services'
 import { useSesion } from '../context/SesionContext'
-import { Cabecera, Cargando, MensajeError } from '../components/ui'
+import { Cabecera, CAMPO, Cargando, MensajeError } from '../components/ui'
+import { esActivo } from '../types/api'
 import type { Almacen, Usuario } from '../types/api'
 import type { Rol } from '../types/estatus'
 
@@ -11,8 +12,7 @@ const ROLES: { valor: Rol; etiqueta: string }[] = [
   { valor: 'TECNICO', etiqueta: 'Técnico' },
 ]
 
-const estiloCampo =
-  'w-full rounded-lg border border-borde bg-white px-3 py-2.5 text-tinta shadow-carta placeholder:text-tinta-3 focus:border-cian focus:outline-none disabled:bg-panel disabled:text-tinta-3'
+const estiloCampo = CAMPO
 
 // Administración de usuarios (solo ADMIN): invitar por correo — Catalyst
 // manda el email para fijar contraseña — y asignar rol/almacén sin pisar la
@@ -161,7 +161,7 @@ export default function UsuariosPage() {
           <div className="space-y-3">
             {usuarios.map((u) => {
               const esYo = yo !== null && u.catalyst_user_id === yo.catalyst_user_id
-              const activo = String(u.activo) !== 'false'
+              const activo = esActivo(u.activo)
               return (
                 <div
                   key={u.ROWID}

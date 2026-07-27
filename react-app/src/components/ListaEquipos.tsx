@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../services'
 import type { FiltrosEquipos } from '../services'
 import type { Almacen, Equipo } from '../types/api'
@@ -37,6 +37,11 @@ export function ListaEquipos({ almacenFijo, conAlmacenes = false, conTotales = f
 
   const POR_PAGINA = 50
 
+  // Guardia de carrera: cambiar filtros rápido lanza varias peticiones y la
+  // más vieja puede llegar al final, pisando la lista con datos rancios.
+  // Solo la respuesta de la petición más reciente toca el estado.
+  const secuencia = useRef(0)
+
   useEffect(() => {
     if (conAlmacenes || almacenFijo) {
       void api.almacenes().then((r) => setAlmacenes(r.data)).catch(() => undefined)
@@ -56,15 +61,18 @@ export function ListaEquipos({ almacenFijo, conAlmacenes = false, conTotales = f
       if (ubicacion) filtros.estatus_ubicacion = ubicacion
       if (condicion) filtros.estatus_condicion = condicion
       if (busqueda.trim()) filtros.q = busqueda.trim()
+      const pedido = ++secuencia.current
       try {
         const r = await api.listarEquipos(filtros)
+        if (pedido !== secuencia.current) return
         setEquipos((prev) => (acumular ? [...prev, ...r.data] : r.data))
         setHayMas(r.has_more)
         setPagina(paginaPedida)
       } catch (e: any) {
+        if (pedido !== secuencia.current) return
         setError(e?.message ?? 'No se pudo cargar el inventario')
       } finally {
-        setCargando(false)
+        if (pedido === secuencia.current) setCargando(false)
       }
     },
     [almacenFijo, almacenId, ubicacion, condicion, busqueda],

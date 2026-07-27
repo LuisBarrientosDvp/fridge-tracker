@@ -17,6 +17,30 @@ function conTimeout<T>(promesa: Promise<T>, ms: number): Promise<T> {
   ])
 }
 
+// Logout manual: <auth_domain>/accounts/p/<zaid>/logout — la URL que el SDK
+// debería armar pero construye relativa (rota en este hosting). El ZAID y
+// el dominio de accounts cambian entre dev y prod, así que se leen de
+// /__catalyst/sdk/init.js (script público del mismo origen que configura el
+// SDK) en vez de hardcodearlos. IAM termina la sesión y redirige a destino.
+async function logoutManual(destino: string): Promise<void> {
+  try {
+    const res = await fetch('/__catalyst/sdk/init.js')
+    const texto = await res.text()
+    const zaid = /["']?zaid["']?\s*:\s*["']?(\d+)/i.exec(texto)?.[1]
+    const dominio =
+      /["']?auth_domain["']?\s*:\s*["']([^"']+)["']/i.exec(texto)?.[1]
+    if (zaid && dominio) {
+      window.location.href =
+        `${dominio}/accounts/p/${zaid}/logout?servicename=ZohoCatalyst&serviceurl=` +
+        encodeURIComponent(destino)
+      return
+    }
+  } catch {
+    // sin red o fuera del dominio hospedado: recargar y que /yo decida
+  }
+  window.location.href = destino
+}
+
 function leerCookie(nombre: string): string | null {
   const partes = document.cookie.split('; ')
   for (const parte of partes) {
@@ -59,14 +83,13 @@ export const authWeb: AuthService = {
   },
 
   cerrarSesion(): void {
-    const catalyst = sdk()
-    // URL absoluta: signOut con ruta relativa falla en algunos entornos.
-    const destino = window.location.origin + '/app/index.html'
-    if (catalyst) {
-      catalyst.auth.signOut(destino)
-    } else {
-      window.location.href = destino
-    }
+    // NO usar catalyst.auth.signOut(): el SDK 4.6.1 arma una URL RELATIVA
+    // (constructSignOutUrl → "/accounts/p/<zaid>/logout...") que NO existe
+    // en el dominio serverless — el hosting la rebota a /app/index.html y
+    // la sesión sigue viva (el clic parece "no hacer nada" / vuelve a
+    // #/menu). Verificado en el fuente del SDK y probando la ruta en el
+    // dominio. El logout real vive en accounts.zohoportal.com.
+    void logoutManual(window.location.origin + '/app/index.html')
   },
 
   async encabezados(): Promise<Record<string, string>> {

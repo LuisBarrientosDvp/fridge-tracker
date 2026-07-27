@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router'
 import { SesionProvider, useSesion } from './context/SesionContext'
-import { Cargando } from './components/ui'
+import { BOTON_SECUNDARIO, Cargando } from './components/ui'
+import { ContadorPendientes } from './components/ContadorPendientes'
 import AlmacenPage from './pages/AlmacenPage'
 import AltaEquipoPage from './pages/AltaEquipoPage'
 import DebugColaPage from './pages/DebugColaPage'
@@ -11,9 +12,6 @@ import LoginPage from './pages/LoginPage'
 import MenuPage from './pages/MenuPage'
 import ReportesPage from './pages/ReportesPage'
 import UsuariosPage from './pages/UsuariosPage'
-
-const BOTON_SECUNDARIO =
-  'rounded-xl bg-white px-4 py-2.5 font-semibold text-tinta shadow-carta ring-1 ring-borde active:bg-panel'
 
 // Verificación de sesión con salida de emergencia: si tarda demasiado (SDK
 // colgado en un dispositivo sin sesión), aparece "Cerrar sesión" para no
@@ -115,7 +113,11 @@ function Compuerta() {
   const gestionaAlmacen = usuario.rol === 'ADMIN' || usuario.rol === 'ENCARGADO'
 
   return (
-    <Routes>
+    <>
+      {/* Regla 6: pendientes por sincronizar visibles en toda pantalla
+          (solo aparece si la cola local tiene algo) */}
+      <ContadorPendientes />
+      <Routes>
       <Route path="/" element={<Navigate to="/menu" replace />} />
       <Route path="/menu" element={<MenuPage />} />
       <Route path="/escanear" element={<EscaneoPage />} />
@@ -135,7 +137,8 @@ function Compuerta() {
       />
       <Route path="/debug" element={<DebugColaPage />} />
       <Route path="*" element={<Navigate to="/menu" replace />} />
-    </Routes>
+      </Routes>
+    </>
   )
 }
 

@@ -1,3 +1,8 @@
+// LEGADO (solo /debug): tipos de la cola local del mockup previo a la fase
+// conectada. Los eventos reales del sistema son los de Movimiento en
+// types/api.ts; estos se conservan porque DebugColaPage y la cola Dexie
+// (storage/db) siguen usándolos. No agregar tipos nuevos aquí.
+//
 // El evento es la unidad que se encola y sincroniza. Nunca se guardan
 // estados ("el equipo X ahora está En tránsito"); el estatus vigente se
 // deriva reproduciendo los eventos en orden de fechaEvento.

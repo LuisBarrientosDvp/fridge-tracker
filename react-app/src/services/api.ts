@@ -13,6 +13,9 @@ import type {
   Usuario,
 } from '../types/api'
 import type { EstatusCondicion, EstatusUbicacion, ReparacionTipo, Rol } from '../types/estatus'
+// TODO(nativo): import directo de la implementación web para evitar el ciclo
+// con services/index.ts. Cuando entre Capacitor, mover la elección de
+// implementación a un módulo de bindings y consumirla desde aquí.
 import { authWeb as auth } from './auth.web'
 
 const BASE = '/server/api'
@@ -80,7 +83,10 @@ export interface AltaEquipo {
   cerveza?: string
   almacen_id?: string
   formato_codigo?: string
+  // Estable por intento de alta: el backend deduplica reintentos con él.
   uuid_cliente?: string
+  // Reloj del dispositivo (regla 4); el servidor solo audita fecha_registro.
+  fecha_evento?: string
   lat?: number
   lng?: number
 }
@@ -153,7 +159,7 @@ export const api = {
     ),
 
   crearEquipo: (datos: AltaEquipo) =>
-    llamar<{ equipo: Equipo; codigos: CodigoEquipo[] }>('/equipos', {
+    llamar<{ equipo: Equipo; codigos: CodigoEquipo[]; idempotente?: boolean }>('/equipos', {
       method: 'POST',
       body: JSON.stringify(datos),
     }),
@@ -164,10 +170,12 @@ export const api = {
       { method: 'POST', body: JSON.stringify(cambio) },
     ),
 
-  cambiarAlmacen: (equipoId: string, almacenId: string, nota?: string) =>
+  // uuid_cliente lo aporta la página (estable por evento, no por llamada):
+  // así un reintento del mismo traslado no duplica el movimiento.
+  cambiarAlmacen: (equipoId: string, almacenId: string, uuidCliente: string, nota?: string) =>
     llamar<{ movimiento: Movimiento }>(`/equipos/${equipoId}/almacen`, {
       method: 'PATCH',
-      body: JSON.stringify({ almacen_id: almacenId, nota, uuid_cliente: crypto.randomUUID() }),
+      body: JSON.stringify({ almacen_id: almacenId, nota, uuid_cliente: uuidCliente }),
     }),
 
   buscarLugares: (tipo: 'PUNTO_VENTA' | 'TALLER', q: string) =>

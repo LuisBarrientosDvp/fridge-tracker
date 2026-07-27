@@ -30,6 +30,14 @@ export default function EscaneoPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const ocupado = useRef(false)
   const [estado, setEstado] = useState<EstadoEscaner>('iniciando')
+  // La cámara sigue detectando con la hoja de 404 abierta: pasada la ventana
+  // de dedup del escáner, el mismo código volvería a disparar resolver() y la
+  // hoja se cerraría sola. El callback del escáner consulta este ref y solo
+  // procesa lecturas en estado 'escaneando'.
+  const estadoRef = useRef<EstadoEscaner>('iniciando')
+  useEffect(() => {
+    estadoRef.current = estado
+  }, [estado])
   const [lectura, setLectura] = useState<Lectura | null>(null)
   const [flash, setFlash] = useState(false)
   const [capturaAbierta, setCapturaAbierta] = useState(false)
@@ -72,6 +80,7 @@ export default function EscaneoPage() {
       }
       try {
         sesion = await scanner.iniciar((l) => {
+          if (estadoRef.current !== 'escaneando') return
           void resolver(l.valorCrudo, l.formato, false)
         })
       } catch {

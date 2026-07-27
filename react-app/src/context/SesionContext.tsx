@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { api, ApiError, auth } from '../services'
 import type { Usuario } from '../types/api'
 
@@ -67,18 +67,19 @@ export function SesionProvider({ children }: { children: React.ReactNode }) {
     void cargar()
   }, [cargar])
 
-  return (
-    <SesionContext.Provider
-      value={{
-        estado,
-        usuario,
-        recargar: () => void cargar(),
-        cerrarSesion: () => auth.cerrarSesion(),
-      }}
-    >
-      {children}
-    </SesionContext.Provider>
+  // Memoizado: sin esto el value se recrea en cada render y todos los
+  // consumidores del contexto se re-renderizan de gratis.
+  const value = useMemo<Sesion>(
+    () => ({
+      estado,
+      usuario,
+      recargar: () => void cargar(),
+      cerrarSesion: () => auth.cerrarSesion(),
+    }),
+    [estado, usuario, cargar],
   )
+
+  return <SesionContext.Provider value={value}>{children}</SesionContext.Provider>
 }
 
 export function useSesion(): Sesion {

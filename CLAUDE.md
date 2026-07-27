@@ -14,6 +14,13 @@ PACNOR DEMO/
 ├── catalyst.json     # Config CLI (cliente = react-app con plugin React). NO editar a mano
 ├── .catalystrc       # Identidad del proyecto. NO editar / NO commitear
 ├── functions/api/    # Advanced I/O Function (Express, node18) — todo el backend
+│   ├── index.js      # solo ensambla: json + cors + auth + routers + errores
+│   ├── rutas/        # un módulo por recurso: codigos · equipos · lugares ·
+│   │                 # almacenes · catalogos · usuarios · yo
+│   ├── lib/          # zcql (esc/idValido/unwrap) · fechas · dominio
+│   │                 # (catálogos+normalizar) · movimientos (validarCambio,
+│   │                 # verificarReferencias, movimientoPorUuid)
+│   └── middleware/   # cors (solo dev :3000) · auth (sesión→Usuario) · roles
 ├── react-app/        # Cliente React+TS (PWA), build CRA vía zcatalyst-cli-plugin-react
 └── CLAUDE.md         # Este archivo (único documento)
 ```
@@ -67,6 +74,17 @@ Reglas vigentes:
   hubo login en este dominio): sin ella `encabezados()` y `estaAutenticado()`
   regresan de inmediato — cero llamadas a clientoauth, cero ruido CORS, login
   instantáneo en dispositivos nuevos.
+- **Logout manual, NUNCA `catalyst.auth.signOut()`** (`cerrarSesion()` en
+  `auth.web.ts`): el SDK 4.6.1 arma la URL de logout **relativa**
+  (`constructSignOutUrl` → `/accounts/p/<zaid>/logout...`) y esa ruta no
+  existe en el dominio serverless — el hosting la rebota a
+  `/app/index.html` y la sesión sigue viva (el botón parece "no hacer
+  nada": recarga a `#/menu`). `/__catalyst/auth/logout` tampoco existe
+  (404). El logout real:
+  `<auth_domain>/accounts/p/<zaid>/logout?servicename=ZohoCatalyst&serviceurl=…`
+  (auth_domain = accounts.zohoportal.com en dev), con zaid y auth_domain
+  leídos en runtime de `/__catalyst/sdk/init.js` (público, mismo origen) —
+  nunca hardcodear el ZAID. Botón "Cerrar sesión" en MenuPage.
 - El TypeError `trackNoPwdContainer ... e is null` en la consola del login
   hospedado viene del script de Zoho (`catalyst_hosted_login_page-*.min.js`),
   no de nuestra app; es cosmético y no bloquea el formulario.
@@ -253,10 +271,10 @@ escritura de App User.
 |---|---|---|
 | GET | `/yo` | Usuario autenticado (extra a la spec) |
 | GET | `/codigos/:codigo` | Resuelve código → 200 equipo / 404 |
-| POST | `/equipos` | Alta; `almacen_id` = el del usuario; crea código principal |
+| POST | `/equipos` | Alta; `almacen_id` = el del usuario; crea código principal. Idempotente por `uuid_cliente` (reintento → 200 con el equipo ya creado); códigos verificados ANTES de insertar y compensación si algo falla a medias |
 | GET | `/equipos` | Filtros almacén/estatus/búsqueda + paginación; ENCARGADO fijado a su almacén |
 | GET | `/equipos/:id` | Ficha + códigos + historial |
-| POST | `/equipos/:id/movimientos` | Valida los 2 ejes; idempotente por `uuid_cliente` (repetido → 200 con el existente) |
+| POST | `/equipos/:id/movimientos` | Valida los 2 ejes Y las referencias (lugar existe y es del tipo correcto, almacén de reparación existe); idempotente por `uuid_cliente` (repetido → 200 con el existente) |
 | PATCH | `/equipos/:id/almacen` | **Solo ADMIN** |
 | GET | `/lugares?tipo=&q=` | Busca por `nombre_normalizado` |
 | POST | `/lugares` | Crea; colisión de normalización → devuelve existente |

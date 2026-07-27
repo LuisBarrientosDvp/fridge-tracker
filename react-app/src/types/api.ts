@@ -3,6 +3,12 @@
 
 import type { EstatusCondicion, EstatusUbicacion, ReparacionTipo, Rol } from './estatus'
 
+// El Data Store devuelve los boolean a veces como string ("true"/"false");
+// comparar contra 'false' cubre ambos casos sin regar el hack por la app.
+export function esActivo(valor: string | boolean): boolean {
+  return String(valor) !== 'false'
+}
+
 export interface Usuario {
   ROWID: string
   catalyst_user_id: string
@@ -54,7 +60,9 @@ export interface Equipo {
   reparacion_tipo: ReparacionTipo | null
   almacen_reparacion_id: string | null
   origen_registro: 'IMPORTACION' | 'CAMPO'
+  registrado_por: string
   fecha_registro: string
+  fecha_ingreso_real: string | null
   CREATEDTIME: string
 }
 

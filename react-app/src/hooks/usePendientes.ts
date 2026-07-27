@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { storage } from '../services'
 
 // Cuenta de eventos sin sincronizar, reactiva a cambios en la cola.
-// Alimenta el contador siempre visible (regla 8 de CLAUDE.md).
+// Alimenta el contador siempre visible (regla 6 de CLAUDE.md).
 export function usePendientes(): number {
   const [pendientes, setPendientes] = useState(0)
 

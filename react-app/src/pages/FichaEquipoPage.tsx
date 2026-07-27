@@ -55,6 +55,10 @@ export default function FichaEquipoPage() {
   const [guardando, setGuardando] = useState(false)
   const [aviso, setAviso] = useState('')
   const qrRef = useRef<HTMLCanvasElement>(null)
+  // UUID estable por EVENTO, no por clic: si el registro falla y el usuario
+  // reintenta la misma acción, el backend deduplica con este uuid (regla 3).
+  // Se limpia al lograrse el registro.
+  const uuidEvento = useRef<string | null>(null)
 
   const cargar = useCallback(async () => {
     if (!id) return
@@ -92,7 +96,9 @@ export default function FichaEquipoPage() {
         errorCorrectionLevel: 'M',
       })
     }
-  }, [panel, equipo])
+    // Solo el serial importa: depender del objeto entero redibujaría el
+    // canvas en cada recarga de la ficha.
+  }, [panel, equipo?.serial])
 
   const mover = async (cambio: Omit<CambioEstatus, 'uuid_cliente' | 'fecha_evento'>) => {
     if (!id) return
@@ -108,12 +114,12 @@ export default function FichaEquipoPage() {
     try {
       await api.crearMovimiento(id, {
         ...cambio,
-        // UUID generado en el cliente: llave de idempotencia (regla 3).
-        uuid_cliente: crypto.randomUUID(),
+        uuid_cliente: uuidEvento.current ?? (uuidEvento.current = crypto.randomUUID()),
         fecha_evento: new Date().toISOString(),
         lat: gps?.lat,
         lng: gps?.lng,
       })
+      uuidEvento.current = null
       setPanel(null)
       setAviso('✓ Movimiento registrado')
       window.setTimeout(() => setAviso(''), 2500)
@@ -129,7 +135,12 @@ export default function FichaEquipoPage() {
     if (!id) return
     setGuardando(true)
     try {
-      await api.cambiarAlmacen(id, almacenId)
+      await api.cambiarAlmacen(
+        id,
+        almacenId,
+        uuidEvento.current ?? (uuidEvento.current = crypto.randomUUID()),
+      )
+      uuidEvento.current = null
       setPanel(null)
       setAviso('✓ Almacén actualizado')
       window.setTimeout(() => setAviso(''), 2500)
@@ -276,7 +287,7 @@ export default function FichaEquipoPage() {
               {movimientos.map((m) => (
                 <li key={m.ROWID} className="relative">
                   <span
-                    className={`absolute -left-6 top-1 h-3 w-3 rounded-full border-2 border-white shadow-[0_0_0_2px_#EEF3F6] ${PUNTO_EVENTO[m.tipo_evento] ?? 'bg-tinta-3'}`}
+                    className={`absolute -left-6 top-1 h-3 w-3 rounded-full border-2 border-white shadow-[0_0_0_2px_theme(colors.divisor)] ${PUNTO_EVENTO[m.tipo_evento] ?? 'bg-tinta-3'}`}
                     aria-hidden
                   />
                   <div className="flex items-baseline justify-between gap-2">
@@ -517,8 +528,15 @@ function PanelInferior({
   children: React.ReactNode
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-marino-900/70 sm:items-center">
-      <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 sm:rounded-2xl">
+    // Tocar el fondo cierra el panel (una mano, sin estirar al botón ✕)
+    <div
+      className="fixed inset-0 z-40 flex items-end justify-center bg-marino-900/70 sm:items-center"
+      onClick={onCerrar}
+    >
+      <div
+        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-bold text-tinta">{titulo}</h2>
           <button

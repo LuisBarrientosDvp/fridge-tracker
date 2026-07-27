@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api, location } from '../services'
 import type { Lugar } from '../types/api'
 
@@ -24,6 +24,10 @@ export function BuscadorLugar({ tipo, onElegir, onCancelar }: Props) {
 
   const etiqueta = tipo === 'PUNTO_VENTA' ? 'punto de venta' : 'taller'
 
+  // Guardia de carrera: una respuesta vieja no debe pisar los resultados de
+  // una consulta más nueva (el debounce no basta si la red desordena).
+  const secuencia = useRef(0)
+
   // Búsqueda con debounce mientras el técnico escribe.
   useEffect(() => {
     if (consulta.trim().length < 2) {
@@ -32,11 +36,14 @@ export function BuscadorLugar({ tipo, onElegir, onCancelar }: Props) {
       return
     }
     const t = window.setTimeout(async () => {
+      const pedido = ++secuencia.current
       try {
         const { data } = await api.buscarLugares(tipo, consulta.trim())
+        if (pedido !== secuencia.current) return
         setResultados(data)
         setBuscado(true)
       } catch {
+        if (pedido !== secuencia.current) return
         setResultados([])
         setBuscado(true)
       }
@@ -72,8 +79,15 @@ export function BuscadorLugar({ tipo, onElegir, onCancelar }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-marino-900/70 sm:items-center">
-      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 sm:rounded-2xl">
+    // Tocar el fondo cancela (una mano, sin estirar al botón ✕)
+    <div
+      className="fixed inset-0 z-40 flex items-end justify-center bg-marino-900/70 sm:items-center"
+      onClick={onCancelar}
+    >
+      <div
+        className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-bold text-tinta">
             {tipo === 'PUNTO_VENTA' ? 'Punto de venta' : 'Taller externo'}

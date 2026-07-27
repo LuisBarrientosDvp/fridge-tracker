@@ -14,6 +14,14 @@ import {
 // alto, nada de hovers como única señal. Estilo del design system: pastillas
 // claras con punto de color, tarjetas blancas con borde suave.
 
+// Recetas de clases compartidas (una sola definición; antes cada página
+// repetía la suya con pequeñas variaciones).
+export const CAMPO =
+  'w-full rounded-xl border border-borde bg-white p-3 text-tinta shadow-carta placeholder:text-tinta-3 focus:border-cian focus:outline-none disabled:bg-panel disabled:text-tinta-3'
+
+export const BOTON_SECUNDARIO =
+  'rounded-xl bg-white px-4 py-2.5 font-semibold text-tinta shadow-carta ring-1 ring-borde active:bg-panel'
+
 // Copo de nieve del design system (trazo cian claro sobre marino).
 export function LogoCopo({ tamano = 26 }: { tamano?: number }) {
   return (

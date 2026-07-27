@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { Cabecera } from '../components/ui'
+import { Cabecera, CAMPO } from '../components/ui'
 import { useSesion } from '../context/SesionContext'
 import { api, location } from '../services'
 import type { Almacen, CatalogoItem } from '../types/api'
@@ -29,6 +29,11 @@ export default function AltaEquipoPage() {
   const [almacenes, setAlmacenes] = useState<Almacen[]>([])
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
+
+  // UUID estable por SESIÓN de formulario (no por clic): si el guardado
+  // falla a media red y el usuario reintenta, el backend deduplica el alta
+  // con este uuid en vez de crear un segundo equipo (regla 3).
+  const uuidAlta = useRef<string>(crypto.randomUUID())
 
   useEffect(() => {
     void api.catalogo('MARCA').then((r) => setMarcas(r.data)).catch(() => undefined)
@@ -64,7 +69,9 @@ export default function AltaEquipoPage() {
         cerveza: cerveza || undefined,
         almacen_id: almacenId,
         formato_codigo: params.get('formato') || undefined,
-        uuid_cliente: crypto.randomUUID(),
+        uuid_cliente: uuidAlta.current,
+        // Reloj del dispositivo: es la fecha que manda en la lógica (regla 4)
+        fecha_evento: new Date().toISOString(),
         lat: gps?.lat,
         lng: gps?.lng,
       })
@@ -75,8 +82,7 @@ export default function AltaEquipoPage() {
     }
   }
 
-  const campo =
-    'w-full rounded-xl border border-borde bg-white p-3 text-tinta shadow-carta placeholder:text-tinta-3 focus:border-cian focus:outline-none disabled:bg-panel'
+  const campo = CAMPO
 
   return (
     <main className="min-h-dvh bg-lienzo pb-16">
